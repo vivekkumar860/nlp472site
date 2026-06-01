@@ -2137,6 +2137,7 @@ function initLessons() {
   LESSONS_DATA.forEach(unit => {
     const btn = document.createElement('button');
     btn.className = 'lesson-unit-pill' + (unit.id === activeLessonUnitId ? ' active' : '');
+    btn.dataset.unitId = unit.id;
     btn.innerHTML = `<span class="pill-num">${unit.num}</span><span class="pill-title">${unit.title}</span>`;
     btn.addEventListener('click', () => {
       activeLessonUnitId = unit.id;
@@ -2149,6 +2150,26 @@ function initLessons() {
 
   renderLessonUnit(activeLessonUnitId);
 }
+
+// Open a specific lesson unit (and optionally scroll to a section) from anywhere in the app
+window.goToLesson = function(unitId, sectionId) {
+  if (window.navigateToView) window.navigateToView('lessons', { silent: true });
+  activeLessonUnitId = unitId;
+  renderLessonUnit(unitId);
+  document.querySelectorAll('.lesson-unit-pill').forEach(p => {
+    p.classList.toggle('active', parseInt(p.dataset.unitId) === unitId);
+  });
+  setTimeout(() => {
+    if (sectionId) {
+      const el = document.getElementById('lesson-' + sectionId);
+      if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); return; }
+    }
+    const lessons = document.getElementById('lessons');
+    if (lessons) lessons.scrollIntoView({ behavior: 'auto', block: 'start' });
+  }, 90);
+  const unit = LESSONS_DATA.find(u => u.id === unitId);
+  if (window.showToast) window.showToast(`Opened lesson: ${unit ? unit.num : 'Unit ' + unitId}`);
+};
 
 function renderLessonUnit(unitId) {
   const unit = LESSONS_DATA.find(u => u.id === unitId);
@@ -2188,11 +2209,14 @@ function renderLessonUnit(unitId) {
   toc.innerHTML = tocHtml;
 
   // Build content
+  const playgroundFor = { 1: 'preproc', 2: 'embeddings', 3: 'lstm', 4: 'translation', 5: 'bert', 6: 'gpt' };
+  const pg = playgroundFor[unit.id];
   let html = `
     <div class="lesson-banner">
       <span class="badge badge-indigo">${unit.num}</span>
       <h3>${unit.title}</h3>
       <p>${unit.intro}</p>
+      ${pg ? `<button class="lesson-playground-link" onclick="goToPlayground('${pg}')">Try it in the Playground →</button>` : ''}
     </div>`;
 
   let n = 0;

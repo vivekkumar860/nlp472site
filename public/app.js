@@ -23,33 +23,38 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- navigation routing ---
 function initNavigation() {
   const navButtons = document.querySelectorAll('.nav-item button');
-  const sections = document.querySelectorAll('.view-section');
-  
   navButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      const targetTab = btn.getAttribute('data-tab');
-      
-      // Update active nav button
-      document.querySelectorAll('.nav-item').forEach(li => li.classList.remove('active'));
-      btn.parentElement.classList.add('active');
-      
-      // Update active section
-      sections.forEach(section => {
-        section.classList.remove('active');
-        if (section.id === targetTab) {
-          section.classList.add('active');
-        }
-      });
-      
-      // Special canvas re-draw if entering Embeddings Explorer
-      if (targetTab === 'playgrounds') {
-        setTimeout(drawEmbeddingSpace, 150);
-      }
-      
-      showToast(`Navigated to ${btn.innerText.trim()}`);
+      navigateToView(btn.getAttribute('data-tab'));
     });
   });
 }
+
+// Programmatic view switching — usable by cross-links across the app
+window.navigateToView = function(targetTab, opts = {}) {
+  const sections = document.querySelectorAll('.view-section');
+
+  document.querySelectorAll('.nav-item').forEach(li => li.classList.remove('active'));
+  const navBtn = document.querySelector(`.nav-item button[data-tab="${targetTab}"]`);
+  if (navBtn) navBtn.parentElement.classList.add('active');
+
+  sections.forEach(section => section.classList.toggle('active', section.id === targetTab));
+
+  if (targetTab === 'playgrounds') setTimeout(drawEmbeddingSpace, 150);
+  if (!opts.keepScroll) window.scrollTo({ top: 0, behavior: 'auto' });
+  if (!opts.silent) showToast(`Navigated to ${navBtn ? navBtn.innerText.trim() : targetTab}`);
+};
+
+// Jump straight to a specific playground panel
+window.goToPlayground = function(panelId) {
+  navigateToView('playgrounds', { silent: true });
+  const btn = document.querySelector(`.playground-nav-btn[data-playground="${panelId}"]`);
+  if (btn) {
+    btn.click();
+    const label = btn.querySelector('span:not(.lbl)');
+    showToast(`Opened playground: ${label ? label.innerText.trim() : panelId}`);
+  }
+};
 
 // --- toast alert helper ---
 function showToast(message) {
@@ -161,12 +166,14 @@ function initSyllabus() {
     dashboardCOGrid.innerHTML = '';
     syllabusCOGrid.innerHTML = '';
     
-    SYLLABUS_DATA.outcomes.forEach(co => {
+    SYLLABUS_DATA.outcomes.forEach((co, idx) => {
+      const unitId = idx + 1; // CO1..CO6 map directly to Unit I..VI
       const coHtml = `
-        <div class="co-card">
+        <div class="co-card co-card-link" role="button" tabindex="0" onclick="goToLesson(${unitId})">
           <span class="co-badge">${co.code}</span>
           <h4 class="co-title">${co.title}</h4>
           <p class="co-desc">${co.desc}</p>
+          <span class="co-go">Study ${SYLLABUS_DATA.units[idx].num} →</span>
         </div>
       `;
       dashboardCOGrid.insertAdjacentHTML('beforeend', coHtml);
@@ -209,6 +216,7 @@ function initSyllabus() {
           <div class="unit-body">
             <div class="unit-content">
               ${subtopicsHtml}
+              <button class="unit-study-btn" onclick="event.stopPropagation(); goToLesson(${unit.id})">Read full notes for ${unit.num} →</button>
             </div>
           </div>
         </div>

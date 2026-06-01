@@ -82,7 +82,7 @@
 
         <!-- Summary Cards Row -->
         <div class="dashboard-grid">
-          <div class="dashboard-card">
+          <div class="dashboard-card dashboard-card-link" role="button" tabindex="0" onclick="navigateToView('syllabus')">
             <div class="card-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             </div>
@@ -90,19 +90,21 @@
               <h3>Course Chapters</h3>
               <div class="stat-number">6 Units</div>
             </div>
+            <span class="card-go">View syllabus →</span>
           </div>
-          
-          <div class="dashboard-card">
+
+          <div class="dashboard-card dashboard-card-link" role="button" tabindex="0" onclick="navigateToView('playgrounds')">
             <div class="card-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
             </div>
             <div class="card-info">
               <h3>Practicals</h3>
-              <div class="stat-number">9 Experiments</div>
+              <div class="stat-number">10 Labs</div>
             </div>
+            <span class="card-go">Open playgrounds →</span>
           </div>
-          
-          <div class="dashboard-card">
+
+          <div class="dashboard-card dashboard-card-link" role="button" tabindex="0" onclick="navigateToView('tracker')">
             <div class="card-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
@@ -110,6 +112,7 @@
               <h3>My Progress</h3>
               <div class="stat-number" id="stat-progress-pct">0%</div>
             </div>
+            <span class="card-go">Track progress →</span>
           </div>
         </div>
 
@@ -132,7 +135,7 @@
         <div class="panel" style="background: linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(168,85,247,0.06) 100%);">
           <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: white;">Welcome to the NLP Study Companion</h3>
           <p style="color: var(--text-muted); font-size: 0.95rem;">
-            This interactive hub consolidates the entire course curriculum. Explore the theory modules inside the <strong>Syllabus</strong> tab, test algorithms through real-time <strong>Playgrounds</strong>, update completion checkmarks in the <strong>Progress Tracker</strong>, and self-assess using the <strong>Knowledge Check</strong>.
+            This interactive hub consolidates the entire course curriculum. Read the <a class="inline-link" onclick="navigateToView('lessons')">Lessons &amp; Notes</a>, explore the theory modules inside the <a class="inline-link" onclick="navigateToView('syllabus')">Syllabus</a> tab, test algorithms through real-time <a class="inline-link" onclick="navigateToView('playgrounds')">Playgrounds</a>, update completion checkmarks in the <a class="inline-link" onclick="navigateToView('tracker')">Progress Tracker</a>, and self-assess using the <a class="inline-link" onclick="navigateToView('quiz')">Knowledge Check</a>.
           </p>
         </div>
       </section>
@@ -208,7 +211,7 @@
             </div>
 
             <ol class="practicals-list">
-              <li class="practical-item">
+              <li class="practical-item practical-item-link" role="button" tabindex="0" onclick="goToPlayground('preproc')">
                 <span class="practical-num">1</span>
                 <div class="practical-body">
                   <div class="practical-head">
@@ -219,7 +222,7 @@
                 </div>
               </li>
 
-              <li class="practical-item">
+              <li class="practical-item practical-item-link" role="button" tabindex="0" onclick="goToPlayground('embeddings')">
                 <span class="practical-num">2</span>
                 <div class="practical-body">
                   <div class="practical-head">
@@ -230,7 +233,7 @@
                 </div>
               </li>
 
-              <li class="practical-item">
+              <li class="practical-item practical-item-link" role="button" tabindex="0" onclick="goToPlayground('cbow')">
                 <span class="practical-num">3</span>
                 <div class="practical-body">
                   <div class="practical-head">
@@ -241,7 +244,7 @@
                 </div>
               </li>
 
-              <li class="practical-item">
+              <li class="practical-item practical-item-link" role="button" tabindex="0" onclick="goToPlayground('embeddings')">
                 <span class="practical-num">4</span>
                 <div class="practical-body">
                   <div class="practical-head">
@@ -252,7 +255,7 @@
                 </div>
               </li>
 
-              <li class="practical-item">
+              <li class="practical-item practical-item-link" role="button" tabindex="0" onclick="goToPlayground('lstm')">
                 <span class="practical-num">5</span>
                 <div class="practical-body">
                   <div class="practical-head">
@@ -263,7 +266,7 @@
                 </div>
               </li>
 
-              <li class="practical-item">
+              <li class="practical-item practical-item-link" role="button" tabindex="0" onclick="goToPlayground('ner')">
                 <span class="practical-num">6</span>
                 <div class="practical-body">
                   <div class="practical-head">
@@ -274,7 +277,7 @@
                 </div>
               </li>
 
-              <li class="practical-item">
+              <li class="practical-item practical-item-link" role="button" tabindex="0" onclick="goToPlayground('translation')">
                 <span class="practical-num">7</span>
                 <div class="practical-body">
                   <div class="practical-head">
@@ -285,7 +288,7 @@
                 </div>
               </li>
 
-              <li class="practical-item">
+              <li class="practical-item practical-item-link" role="button" tabindex="0" onclick="goToPlayground('summarization')">
                 <span class="practical-num">8</span>
                 <div class="practical-body">
                   <div class="practical-head">
@@ -296,7 +299,7 @@
                 </div>
               </li>
 
-              <li class="practical-item">
+              <li class="practical-item practical-item-link" role="button" tabindex="0" onclick="goToPlayground('bert')">
                 <span class="practical-num">9</span>
                 <div class="practical-body">
                   <div class="practical-head">
@@ -307,7 +310,7 @@
                 </div>
               </li>
 
-              <li class="practical-item">
+              <li class="practical-item practical-item-link" role="button" tabindex="0" onclick="goToPlayground('gpt')">
                 <span class="practical-num">10</span>
                 <div class="practical-body">
                   <div class="practical-head">

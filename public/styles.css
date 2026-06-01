@@ -1766,6 +1766,104 @@ table.attention-table td.word-label {
   line-height: 1.55;
 }
 
+/* --- Cross-link affordances --- */
+.dashboard-card-link,
+.co-card-link,
+.practical-item-link {
+  cursor: pointer;
+}
+.dashboard-card-link:hover,
+.co-card-link:hover,
+.practical-item-link:hover {
+  border-color: var(--border-glow);
+}
+.dashboard-card-link:focus-visible,
+.co-card-link:focus-visible,
+.practical-item-link:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.card-go,
+.co-go {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-top: 0.6rem;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.dashboard-card-link:hover .card-go,
+.co-card-link:hover .co-go,
+.dashboard-card-link:focus-visible .card-go,
+.co-card-link:focus-visible .co-go {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.practical-item-link .practical-body::after {
+  content: "Open in Playground →";
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent-cyan);
+  margin-top: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.practical-item-link:hover .practical-body::after,
+.practical-item-link:focus-visible .practical-body::after {
+  opacity: 1;
+}
+
+.unit-study-btn {
+  margin-top: 1.25rem;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  color: #c7d2fe;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.unit-study-btn:hover {
+  background: rgba(99, 102, 241, 0.22);
+  border-color: var(--primary-color);
+}
+
+.lesson-playground-link {
+  display: inline-block;
+  margin-top: 1rem;
+  background: rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  color: #67e8f9;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.5rem 1.05rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.lesson-playground-link:hover {
+  background: rgba(6, 182, 212, 0.22);
+  border-color: var(--accent-cyan);
+}
+
+.inline-link {
+  color: var(--accent-cyan);
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(6, 182, 212, 0.5);
+}
+.inline-link:hover {
+  border-bottom-style: solid;
+}
+
 /* --- Playground: BiLSTM NER --- */
 .ner-legend {
   display: flex;
