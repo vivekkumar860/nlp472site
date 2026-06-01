@@ -1,3 +1,5 @@
-name = "nlp-hub"
+name = "nlp472site"
 compatibility_date = "2025-06-02"
-pages_build_output_dir = "public"
+
+[assets]
+directory = "public"
