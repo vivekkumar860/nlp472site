@@ -24,37 +24,37 @@
       
       <ul class="nav-menu">
         <li class="nav-item active">
-          <button data-tab="dashboard">
+          <button data-tab="dashboard" data-label="Home">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
             <span class="card-icon-span">Dashboard</span>
           </button>
         </li>
         <li class="nav-item">
-          <button data-tab="syllabus">
+          <button data-tab="syllabus" data-label="Syllabus">
             <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             <span class="card-icon-span">Syllabus & Units</span>
           </button>
         </li>
         <li class="nav-item">
-          <button data-tab="lessons">
+          <button data-tab="lessons" data-label="Lessons">
             <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
             <span class="card-icon-span">Lessons & Notes</span>
           </button>
         </li>
         <li class="nav-item">
-          <button data-tab="playgrounds">
+          <button data-tab="playgrounds" data-label="Play">
             <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             <span class="card-icon-span">Playgrounds</span>
           </button>
         </li>
         <li class="nav-item">
-          <button data-tab="tracker">
+          <button data-tab="tracker" data-label="Progress">
             <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <span class="card-icon-span">Progress Tracker</span>
           </button>
         </li>
         <li class="nav-item">
-          <button data-tab="quiz">
+          <button data-tab="quiz" data-label="Quiz">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <span class="card-icon-span">Knowledge Check</span>
           </button>
@@ -146,7 +146,7 @@
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 2rem;">
           <!-- Course Outcomes Reference -->
           <div class="panel">
             <div class="panel-header">
@@ -542,7 +542,7 @@
                 <strong>Prompt Seed:</strong> <span style="font-family: var(--font-mono); color: var(--accent-cyan);">"Artificial intelligence is"</span>
               </div>
               
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
                 <div class="input-group">
                   <label for="gpt-strategy">Decoding Strategy</label>
                   <select id="gpt-strategy" class="input-control" onchange="runGPTDecodingSimulation()">
@@ -602,7 +602,7 @@
           <button class="btn btn-secondary" onclick="resetProgress()">Reset Progress Logs</button>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start;">
+        <div class="tracker-layout" style="display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 2rem; align-items: start;">
           <!-- Checklist -->
           <div class="panel">
             <div class="panel-header">
