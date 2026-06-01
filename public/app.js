@@ -601,6 +601,44 @@ function initSimulatorsUI() {
     runTranslationSimulation();
   }
   
+  // -- Simulator: BiLSTM NER (Practical 6) --
+  const nerBtn = document.getElementById('ner-tag-btn');
+  if (nerBtn) {
+    nerBtn.addEventListener('click', runNERSimulation);
+    const nerSelect = document.getElementById('ner-sentence-select');
+    if (nerSelect) {
+      nerSelect.addEventListener('change', () => {
+        document.getElementById('ner-input').value = nerSelect.value;
+        runNERSimulation();
+      });
+    }
+    runNERSimulation();
+  }
+
+  // -- Simulator: Attention Summarizer & ROUGE (Practical 8) --
+  const summBtn = document.getElementById('summ-run-btn');
+  if (summBtn) {
+    summBtn.addEventListener('click', runSummarizationSimulation);
+    const summSelect = document.getElementById('summ-doc-select');
+    if (summSelect) {
+      summSelect.addEventListener('change', () => {
+        document.getElementById('summ-doc-text').value = SUMM_DOCS[parseInt(summSelect.value)].text;
+        runSummarizationSimulation();
+      });
+    }
+    // load default doc text
+    document.getElementById('summ-doc-text').value = SUMM_DOCS[0].text;
+    runSummarizationSimulation();
+  }
+
+  // -- Simulator: Fine-tune BERT (Practical 9) --
+  const bertTrainBtn = document.getElementById('bert-train-btn');
+  if (bertTrainBtn) {
+    bertTrainBtn.addEventListener('click', runBertFineTuning);
+    const bertClassifyBtn = document.getElementById('bert-classify-btn');
+    if (bertClassifyBtn) bertClassifyBtn.addEventListener('click', runBertClassification);
+  }
+
   // -- Simulator 6: GPT Text Decoder --
   const runGptBtn = document.getElementById('gpt-decode-btn');
   if (runGptBtn) {
@@ -1203,4 +1241,283 @@ function runGPTDecodingSimulation() {
     <strong>Generated Output Text:</strong><br>
     <span style="font-size: 1.15rem; color: var(--success); font-weight: 700;">"${generatedText} ..."</span>
   `;
+}
+
+// -------------------------------------------------------------
+// Practical 6: Bidirectional LSTM — Named Entity Recognition
+// -------------------------------------------------------------
+const NER_GAZETTEER = {
+  PER: new Set(['barack', 'obama', 'smith', 'sundar', 'pichai', 'tim', 'cook', 'einstein', 'mary', 'john', 'sarah', 'david', 'angela', 'merkel']),
+  LOC: new Set(['hawaii', 'seattle', 'london', 'paris', 'california', 'india', 'america', 'france', 'germany', 'tokyo', 'japan', 'china', 'york']),
+  ORG: new Set(['microsoft', 'google', 'apple', 'amazon', 'openai', 'nasa', 'tesla', 'meta', 'ibm', 'oracle'])
+};
+const NER_TITLES = new Set(['mr', 'mrs', 'ms', 'dr', 'president', 'prof', 'professor', 'sir']);
+const NER_ORG_SUFFIX = ['inc', 'corp', 'ltd', 'llc', 'university', 'company', 'group'];
+
+function nerPredictTag(tokens, idx) {
+  const raw = tokens[idx];
+  const clean = raw.toLowerCase().replace(/[^a-z]/g, '');
+  if (!clean) return 'O';
+
+  if (NER_GAZETTEER.PER.has(clean)) return 'PER';
+  if (NER_GAZETTEER.LOC.has(clean)) return 'LOC';
+  if (NER_GAZETTEER.ORG.has(clean)) return 'ORG';
+  if (NER_ORG_SUFFIX.includes(clean)) return 'ORG';
+
+  const isCapitalized = /^[A-Z]/.test(raw);
+  if (!isCapitalized) return 'O';
+
+  // Capitalized but unknown — use bidirectional context heuristics
+  const prev = idx > 0 ? tokens[idx - 1].toLowerCase().replace(/[^a-z]/g, '') : '';
+  const next = idx < tokens.length - 1 ? tokens[idx + 1].toLowerCase().replace(/[^a-z]/g, '') : '';
+  if (NER_TITLES.has(prev)) return 'PER';                 // forward context: title before name
+  if (['in', 'at', 'from', 'to', 'near'].includes(prev)) return 'LOC'; // locative preposition
+  if (NER_ORG_SUFFIX.includes(next)) return 'ORG';        // backward context: org suffix follows
+  if (idx === 0) return 'O';                              // sentence-initial capital, no signal
+  return 'PER';                                           // default mid-sentence proper noun
+}
+
+function runNERSimulation() {
+  const input = document.getElementById('ner-input');
+  const output = document.getElementById('ner-output');
+  const summary = document.getElementById('ner-summary');
+  if (!input || !output) return;
+
+  const tokens = input.value.split(/\s+/).filter(t => t.length > 0);
+  if (!tokens.length) { showToast('Please enter a sentence!'); return; }
+
+  const tagNames = { PER: 'Person', LOC: 'Location', ORG: 'Organization', O: 'Other' };
+  const counts = { PER: [], LOC: [], ORG: [] };
+
+  output.innerHTML = tokens.map((tok, i) => {
+    const tag = nerPredictTag(tokens, i);
+    if (counts[tag]) counts[tag].push(tok.replace(/[.,]$/, ''));
+    return `
+      <span class="ner-token ner-${tag}" title="${tagNames[tag]}">
+        <span class="ner-word">${tok}</span>
+        <span class="ner-tag-label">${tag}</span>
+      </span>`;
+  }).join('');
+
+  const parts = Object.keys(counts)
+    .filter(t => counts[t].length)
+    .map(t => `<strong style="color:white;">${tagNames[t]}:</strong> ${counts[t].join(', ')}`);
+  summary.innerHTML = parts.length
+    ? `<strong>Extracted entities</strong><br>${parts.join(' &nbsp;•&nbsp; ')}`
+    : 'No named entities detected in this sentence.';
+}
+
+// -------------------------------------------------------------
+// Practical 8: Attention Summarizer + ROUGE
+// -------------------------------------------------------------
+const SUMM_DOCS = [
+  {
+    text: "A leading technology lab announced a major artificial intelligence research fund this week. The fund will support open research into language models and safety. Industry analysts say the investment could accelerate progress across the field. Smaller startups welcomed the news as a chance to access shared resources.",
+    reference: "A technology lab announced a major artificial intelligence research fund to support language model and safety research."
+  },
+  {
+    text: "The championship final drew a record crowd to the national stadium on Sunday. The home team scored twice in the second half to win the title. Fans celebrated late into the night across the city. The captain praised his teammates for their hard work all season.",
+    reference: "The home team won the championship final with two second-half goals before a record crowd."
+  },
+  {
+    text: "The space agency confirmed that its new rover landed safely on Mars early this morning. The rover will search for signs of ancient microbial life in an old lake bed. Scientists expect the first high resolution images within a few days. The mission is planned to last at least two years.",
+    reference: "A new rover landed safely on Mars to search for ancient microbial life in a dried lake bed."
+  }
+];
+
+function summTokenize(text) {
+  return text.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+}
+
+function summSplitSentences(text) {
+  return text.split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
+}
+
+function extractiveSummary(text, numSentences = 2) {
+  const sentences = summSplitSentences(text);
+  const freq = {};
+  summTokenize(text).forEach(w => {
+    if (!window.nlpEngine.STOPWORDS.has(w)) freq[w] = (freq[w] || 0) + 1;
+  });
+  const scored = sentences.map((s, i) => {
+    const words = summTokenize(s).filter(w => !window.nlpEngine.STOPWORDS.has(w));
+    let score = words.reduce((sum, w) => sum + (freq[w] || 0), 0) / (words.length || 1);
+    score += (sentences.length - i) * 0.15; // lead/position bias
+    return { s, i, score };
+  });
+  const top = scored.slice().sort((a, b) => b.score - a.score).slice(0, numSentences);
+  top.sort((a, b) => a.i - b.i); // restore reading order
+  return top.map(t => t.s).join(' ');
+}
+
+function lcsLength(a, b) {
+  const dp = Array(a.length + 1).fill(null).map(() => Array(b.length + 1).fill(0));
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] + 1 : Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  return dp[a.length][b.length];
+}
+
+function ngrams(tokens, n) {
+  const grams = [];
+  for (let i = 0; i + n <= tokens.length; i++) grams.push(tokens.slice(i, i + n).join(' '));
+  return grams;
+}
+
+function overlapCount(candGrams, refGrams) {
+  const refCounts = {};
+  refGrams.forEach(g => refCounts[g] = (refCounts[g] || 0) + 1);
+  let match = 0;
+  candGrams.forEach(g => { if (refCounts[g] > 0) { match++; refCounts[g]--; } });
+  return match;
+}
+
+function prf(match, candTotal, refTotal) {
+  const p = candTotal ? match / candTotal : 0;
+  const r = refTotal ? match / refTotal : 0;
+  const f = (p + r) ? (2 * p * r) / (p + r) : 0;
+  return { p, r, f };
+}
+
+function computeRouge(candidate, reference) {
+  const c = summTokenize(candidate);
+  const r = summTokenize(reference);
+  const r1 = prf(overlapCount(c, r), c.length, r.length);
+  const c2 = ngrams(c, 2), r2 = ngrams(r, 2);
+  const rouge2 = prf(overlapCount(c2, r2), c2.length, r2.length);
+  const lcs = lcsLength(c, r);
+  const rl = prf(lcs, c.length, r.length);
+  return { r1, rouge2, rl };
+}
+
+function runSummarizationSimulation() {
+  const text = document.getElementById('summ-doc-text').value;
+  const idx = parseInt(document.getElementById('summ-doc-select').value) || 0;
+  const reference = SUMM_DOCS[idx] ? SUMM_DOCS[idx].reference : '';
+  if (!text.trim()) { showToast('Please enter source text!'); return; }
+
+  const summary = extractiveSummary(text, 2);
+  document.getElementById('summ-generated').textContent = summary;
+  document.getElementById('summ-reference').textContent = reference;
+
+  const rouge = computeRouge(summary, reference);
+  const cards = [
+    { name: 'ROUGE-1', v: rouge.r1, desc: 'unigram overlap' },
+    { name: 'ROUGE-2', v: rouge.rouge2, desc: 'bigram overlap' },
+    { name: 'ROUGE-L', v: rouge.rl, desc: 'longest common subseq.' }
+  ];
+  document.getElementById('summ-rouge').innerHTML = cards.map(card => `
+    <div class="rouge-card">
+      <div class="rouge-name">${card.name}</div>
+      <div class="rouge-f1">${(card.v.f * 100).toFixed(1)}<span>%</span></div>
+      <div class="rouge-pr">P ${(card.v.p * 100).toFixed(0)}% · R ${(card.v.r * 100).toFixed(0)}%</div>
+      <div class="rouge-desc">${card.desc}</div>
+    </div>
+  `).join('');
+}
+
+// -------------------------------------------------------------
+// Practical 9: Fine-tune BERT — Sentiment Classification
+// -------------------------------------------------------------
+let bertTrained = false;
+
+const BERT_POS = new Set(['good', 'great', 'fantastic', 'brilliant', 'excellent', 'love', 'loved', 'amazing', 'wonderful', 'best', 'enjoyed', 'happy', 'superb']);
+const BERT_NEG = new Set(['bad', 'terrible', 'awful', 'boring', 'worst', 'hate', 'hated', 'poor', 'disappointing', 'dull', 'weak', 'horrible']);
+const BERT_NEGATORS = new Set(["not", "n't", 'never', 'no', 'hardly', 'barely']);
+
+function runBertFineTuning() {
+  const epochs = parseInt(document.getElementById('bert-epochs').value) || 4;
+  const lr = document.getElementById('bert-lr').value;
+  const list = document.getElementById('bert-epoch-list');
+  const metrics = document.getElementById('bert-metrics');
+  const classifyBtn = document.getElementById('bert-classify-btn');
+  list.innerHTML = '';
+  metrics.style.display = 'none';
+
+  // target metrics depend on learning rate
+  const ceiling = lr === 'high' ? 0.90 : lr === 'low' ? 0.93 : 0.94;
+  let epoch = 0;
+
+  const tick = () => {
+    epoch++;
+    const progress = epoch / epochs;
+    const acc = ceiling * (1 - Math.exp(-2.3 * progress));
+    const loss = 0.69 * Math.exp(-1.8 * progress) + 0.05;
+    const f1 = acc - 0.01;
+    list.insertAdjacentHTML('beforeend', `
+      <div class="bert-epoch-row">
+        <span class="bert-epoch-tag">Epoch ${epoch}/${epochs}</span>
+        <div class="bert-bar"><div class="bert-bar-fill" style="width:${(acc * 100).toFixed(0)}%"></div></div>
+        <span class="bert-epoch-vals">loss ${loss.toFixed(3)} · acc ${(acc * 100).toFixed(1)}%</span>
+      </div>
+    `);
+    if (epoch >= epochs) {
+      clearInterval(timer);
+      document.getElementById('bert-acc').textContent = (acc * 100).toFixed(1) + '%';
+      document.getElementById('bert-f1').textContent = (f1 * 100).toFixed(1) + '%';
+      metrics.style.display = 'flex';
+      bertTrained = true;
+      classifyBtn.disabled = false;
+      showToast('Fine-tuning complete — model ready to classify.');
+      runBertClassification();
+    }
+  };
+  const timer = setInterval(tick, 550);
+  tick();
+}
+
+function bowSentiment(tokens) {
+  let score = 0;
+  tokens.forEach(t => {
+    if (BERT_POS.has(t)) score += 1;
+    if (BERT_NEG.has(t)) score -= 1;
+  });
+  return score;
+}
+
+function bertSentiment(tokens) {
+  // contextual: a negator flips the polarity of the next sentiment word
+  let score = 0;
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    let polarity = BERT_POS.has(t) ? 1 : BERT_NEG.has(t) ? -1 : 0;
+    if (polarity !== 0) {
+      const window = tokens.slice(Math.max(0, i - 2), i);
+      if (window.some(w => BERT_NEGATORS.has(w) || w.endsWith("n't"))) polarity *= -1;
+      score += polarity;
+    }
+  }
+  return score;
+}
+
+function labelFor(score) {
+  if (score > 0) return { label: 'Positive', cls: 'pos' };
+  if (score < 0) return { label: 'Negative', cls: 'neg' };
+  return { label: 'Neutral', cls: 'neu' };
+}
+
+function runBertClassification() {
+  if (!bertTrained) { showToast('Fine-tune the model first.'); return; }
+  const raw = document.getElementById('bert-test-input').value;
+  const tokens = raw.toLowerCase().replace(/[^a-z0-9'\s]/g, '').split(/\s+/).filter(Boolean);
+  const hasNegation = tokens.some(w => BERT_NEGATORS.has(w) || w.endsWith("n't"));
+
+  const bow = labelFor(bowSentiment(tokens));
+  const bert = labelFor(bertSentiment(tokens));
+
+  const compare = document.getElementById('bert-compare');
+  compare.style.display = 'grid';
+  document.getElementById('bert-bow-pred').textContent = bow.label;
+  document.getElementById('bert-bow-pred').className = 'bert-compare-pred ' + bow.cls;
+  document.getElementById('bert-bow-note').textContent = hasNegation
+    ? 'Ignores word order — misses the negation.'
+    : 'Counts sentiment words directly.';
+
+  document.getElementById('bert-bert-pred').textContent = bert.label;
+  document.getElementById('bert-bert-pred').className = 'bert-compare-pred ' + bert.cls;
+  document.getElementById('bert-bert-note').textContent = hasNegation
+    ? 'Contextual embeddings capture the negation.'
+    : 'Reads context around each sentiment word.';
 }

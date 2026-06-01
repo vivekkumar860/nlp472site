@@ -355,7 +355,7 @@
         <div class="header-wrapper">
           <div class="page-title">
             <h2>Interactive Playgrounds</h2>
-            <p>Run simulated pipelines for word embeddings, sequential LSTMs, translations, and GPT-2 decoding.</p>
+            <p>Hands-on simulators for all 10 lab practicals — preprocessing, embeddings, RNNs, NER, attention, summarization, BERT, and GPT-2 decoding.</p>
           </div>
         </div>
 
@@ -364,27 +364,39 @@
           <!-- Inner Nav -->
           <nav class="playground-nav">
             <button class="playground-nav-btn active" data-playground="preproc">
-              <span class="lbl">Experiment 1</span>
+              <span class="lbl">Practical 1</span>
               <span>Text Preprocessor & Vectorizer</span>
             </button>
             <button class="playground-nav-btn" data-playground="embeddings">
-              <span class="lbl">Experiments 2 & 3</span>
+              <span class="lbl">Practicals 2 & 4</span>
               <span>Embeddings 2D Space</span>
             </button>
             <button class="playground-nav-btn" data-playground="cbow">
-              <span class="lbl">Experiment 3 (Training)</span>
+              <span class="lbl">Practical 3</span>
               <span>CBOW vs Skip-Gram</span>
             </button>
             <button class="playground-nav-btn" data-playground="lstm">
-              <span class="lbl">Experiment 4</span>
-              <span>LSTM Sequence Classifier</span>
+              <span class="lbl">Practical 5</span>
+              <span>LSTM Sentiment Classifier</span>
+            </button>
+            <button class="playground-nav-btn" data-playground="ner">
+              <span class="lbl">Practical 6</span>
+              <span>BiLSTM Named Entity Recognition</span>
             </button>
             <button class="playground-nav-btn" data-playground="translation">
-              <span class="lbl">Experiment 6</span>
+              <span class="lbl">Practical 7</span>
               <span>Attention Translator</span>
             </button>
+            <button class="playground-nav-btn" data-playground="summarization">
+              <span class="lbl">Practical 8</span>
+              <span>Attention Summarizer & ROUGE</span>
+            </button>
+            <button class="playground-nav-btn" data-playground="bert">
+              <span class="lbl">Practical 9</span>
+              <span>Fine-tune BERT Classifier</span>
+            </button>
             <button class="playground-nav-btn" data-playground="gpt">
-              <span class="lbl">Experiment 9</span>
+              <span class="lbl">Practical 10</span>
               <span>GPT-2 Decoder Tree</span>
             </button>
           </nav>
@@ -613,6 +625,50 @@
               </div>
             </div>
             
+            <!-- Panel: BiLSTM Named Entity Recognition (Practical 6) -->
+            <div class="panel playground-panel" id="playground-ner">
+              <div class="panel-header">
+                <h3>Bidirectional LSTM — Named Entity Recognition</h3>
+              </div>
+
+              <div class="input-group">
+                <label for="ner-sentence-select">Select an annotated test sentence</label>
+                <select id="ner-sentence-select" class="input-control">
+                  <option value="Barack Obama was born in Hawaii and worked at Microsoft in Seattle">Obama / Hawaii / Microsoft / Seattle</option>
+                  <option value="Dr Smith flew from London to Paris to meet engineers at Google">Smith / London / Paris / Google</option>
+                  <option value="Sundar Pichai leads Google while Tim Cook runs Apple in California">Pichai / Google / Cook / Apple / California</option>
+                </select>
+              </div>
+
+              <div class="input-group">
+                <label for="ner-input">Or edit the source sentence</label>
+                <input type="text" id="ner-input" class="input-control" value="Barack Obama was born in Hawaii and worked at Microsoft in Seattle">
+              </div>
+
+              <button class="btn btn-primary" id="ner-tag-btn" style="margin-bottom: 1.5rem;">Tag Entities</button>
+
+              <div class="ner-legend" id="ner-legend">
+                <span class="ner-chip ner-PER">Person</span>
+                <span class="ner-chip ner-LOC">Location</span>
+                <span class="ner-chip ner-ORG">Organization</span>
+                <span class="ner-chip ner-O">Other</span>
+              </div>
+
+              <div style="margin: 1.25rem 0;">
+                <h5 style="color: white; font-weight: 600; margin-bottom: 0.75rem;">Token-level BIO Tagging</h5>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 1rem;">
+                  Each token is labelled using both left (forward LSTM) and right (backward LSTM) context. Hover a token to see its predicted tag.
+                </p>
+                <div class="ner-output" id="ner-output">
+                  <!-- Tagged tokens injected by app.js -->
+                </div>
+              </div>
+
+              <div id="ner-summary" class="panel" style="background: rgba(0,0,0,0.2); margin-bottom:0; font-size: 0.9rem;">
+                <!-- Entity summary injected by app.js -->
+              </div>
+            </div>
+
             <!-- Panel 5: Attention Seq2Seq Translator -->
             <div class="panel playground-panel" id="playground-translation">
               <div class="panel-header">
@@ -652,6 +708,109 @@
               </div>
             </div>
             
+            <!-- Panel: Attention Summarizer & ROUGE (Practical 8) -->
+            <div class="panel playground-panel" id="playground-summarization">
+              <div class="panel-header">
+                <h3>Attention Seq2Seq Summarizer — ROUGE Evaluation</h3>
+              </div>
+
+              <div class="input-group">
+                <label for="summ-doc-select">Select a source document</label>
+                <select id="summ-doc-select" class="input-control">
+                  <option value="0">Tech — AI research funding</option>
+                  <option value="1">Sports — championship final</option>
+                  <option value="2">Science — Mars mission</option>
+                </select>
+              </div>
+
+              <div class="input-group">
+                <label for="summ-doc-text">Source text</label>
+                <textarea id="summ-doc-text" class="input-control" style="min-height: 110px;"></textarea>
+              </div>
+
+              <button class="btn btn-primary" id="summ-run-btn" style="margin-bottom: 1.5rem;">Generate Summary &amp; Score</button>
+
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem;">
+                <div>
+                  <h5 style="color: white; font-weight: 600; margin-bottom: 0.5rem;">Generated Summary</h5>
+                  <div id="summ-generated" style="background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.25); padding: 1rem 1.25rem; border-radius: var(--radius-md); font-size: 0.9rem;"></div>
+                </div>
+                <div>
+                  <h5 style="color: white; font-weight: 600; margin-bottom: 0.5rem;">Reference Summary (gold)</h5>
+                  <div id="summ-reference" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 1rem 1.25rem; border-radius: var(--radius-md); font-size: 0.9rem; color: var(--text-muted);"></div>
+                </div>
+              </div>
+
+              <div style="margin-top: 1.5rem;">
+                <h5 style="color: white; font-weight: 600; margin-bottom: 0.75rem;">ROUGE Scores (candidate vs. reference)</h5>
+                <div class="rouge-grid" id="summ-rouge">
+                  <!-- ROUGE cards injected by app.js -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel: Fine-tune BERT Classifier (Practical 9) -->
+            <div class="panel playground-panel" id="playground-bert">
+              <div class="panel-header">
+                <h3>Fine-tuning BERT — Sentiment Classification</h3>
+              </div>
+
+              <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom: 1.25rem;">
+                Simulate fine-tuning a pretrained BERT model on a sentiment dataset (IMDB / SMS Spam style), then classify new reviews and compare against a Bag-of-Words baseline.
+              </p>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(160px, 100%), 1fr)); gap: 1rem; margin-bottom: 1.25rem;">
+                <div class="input-group">
+                  <label for="bert-epochs">Training epochs</label>
+                  <select id="bert-epochs" class="input-control">
+                    <option value="3">3 epochs</option>
+                    <option value="4" selected>4 epochs</option>
+                    <option value="5">5 epochs</option>
+                  </select>
+                </div>
+                <div class="input-group">
+                  <label for="bert-lr">Learning rate</label>
+                  <select id="bert-lr" class="input-control">
+                    <option value="high">5e-5 (fast)</option>
+                    <option value="mid" selected>2e-5 (recommended)</option>
+                    <option value="low">1e-5 (stable)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" id="bert-train-btn" style="margin-bottom: 1.5rem;">Fine-tune Model</button>
+
+              <div style="margin-bottom: 1.5rem;">
+                <h5 style="color: white; font-weight: 600; margin-bottom: 0.75rem;">Training Progress</h5>
+                <div class="bert-epoch-list" id="bert-epoch-list">
+                  <!-- Epoch rows injected by app.js -->
+                </div>
+                <div class="bert-metrics" id="bert-metrics" style="display:none;">
+                  <div class="bert-metric"><span class="bert-metric-val" id="bert-acc">—</span><span class="bert-metric-lbl">Accuracy</span></div>
+                  <div class="bert-metric"><span class="bert-metric-val" id="bert-f1">—</span><span class="bert-metric-lbl">F1-score</span></div>
+                </div>
+              </div>
+
+              <div class="input-group">
+                <label for="bert-test-input">Classify a new review</label>
+                <input type="text" id="bert-test-input" class="input-control" value="the plot was not good at all">
+              </div>
+              <button class="btn btn-secondary" id="bert-classify-btn" style="margin-bottom: 1.5rem;" disabled>Classify Review</button>
+
+              <div class="bert-compare" id="bert-compare" style="display:none;">
+                <div class="bert-compare-card" id="bert-bow-card">
+                  <div class="bert-compare-title">Bag-of-Words baseline</div>
+                  <div class="bert-compare-pred" id="bert-bow-pred">—</div>
+                  <div class="bert-compare-note" id="bert-bow-note"></div>
+                </div>
+                <div class="bert-compare-card" id="bert-bert-card">
+                  <div class="bert-compare-title">Fine-tuned BERT</div>
+                  <div class="bert-compare-pred" id="bert-bert-pred">—</div>
+                  <div class="bert-compare-note" id="bert-bert-note"></div>
+                </div>
+              </div>
+            </div>
+
             <!-- Panel 6: GPT Generation strategies -->
             <div class="panel playground-panel" id="playground-gpt">
               <div class="panel-header">

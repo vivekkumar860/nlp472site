@@ -1766,6 +1766,97 @@ table.attention-table td.word-label {
   line-height: 1.55;
 }
 
+/* --- Playground: BiLSTM NER --- */
+.ner-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.ner-chip {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+}
+.ner-PER, .ner-token.ner-PER { background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.4); color: #d8b4fe; }
+.ner-LOC, .ner-token.ner-LOC { background: rgba(6, 182, 212, 0.15); border-color: rgba(6, 182, 212, 0.4); color: #67e8f9; }
+.ner-ORG, .ner-token.ner-ORG { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); color: #6ee7b7; }
+.ner-O,   .ner-token.ner-O   { background: rgba(255, 255, 255, 0.04); border-color: var(--border-color); color: var(--text-muted); }
+
+.ner-output {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.ner-token {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.4rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+}
+.ner-word { font-size: 0.9rem; font-weight: 600; color: white; }
+.ner-token.ner-O .ner-word { color: var(--text-muted); font-weight: 500; }
+.ner-tag-label { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.5px; }
+
+/* --- Playground: ROUGE cards --- */
+.rouge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
+  gap: 1rem;
+}
+.rouge-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1rem;
+  text-align: center;
+}
+.rouge-name { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; color: var(--accent-cyan); text-transform: uppercase; }
+.rouge-f1 { font-size: 2rem; font-weight: 800; color: white; margin: 0.3rem 0; }
+.rouge-f1 span { font-size: 1rem; color: var(--text-muted); }
+.rouge-pr { font-size: 0.75rem; color: var(--text-muted); }
+.rouge-desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 0.35rem; font-style: italic; }
+
+/* --- Playground: BERT fine-tuning --- */
+.bert-epoch-list { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1rem; }
+.bert-epoch-row { display: flex; align-items: center; gap: 0.85rem; }
+.bert-epoch-tag { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); min-width: 78px; }
+.bert-bar { flex-grow: 1; height: 8px; background: rgba(255, 255, 255, 0.06); border-radius: 999px; overflow: hidden; }
+.bert-bar-fill { height: 100%; background: var(--accent-gradient); border-radius: 999px; transition: width 0.5s ease; }
+.bert-epoch-vals { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); min-width: 150px; text-align: right; }
+
+.bert-metrics { display: flex; gap: 1rem; }
+.bert-metric {
+  flex: 1;
+  background: rgba(6, 182, 212, 0.06);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+}
+.bert-metric-val { display: block; font-size: 1.8rem; font-weight: 800; color: white; }
+.bert-metric-lbl { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+.bert-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 1rem; }
+.bert-compare-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  text-align: center;
+}
+.bert-compare-title { font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.6rem; }
+.bert-compare-pred { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem; }
+.bert-compare-pred.pos { color: var(--success); }
+.bert-compare-pred.neg { color: var(--accent-pink); }
+.bert-compare-pred.neu { color: var(--text-muted); }
+.bert-compare-note { font-size: 0.78rem; color: var(--text-muted); line-height: 1.4; }
+
 /* Tooltip definitions */
 .tooltip {
   position: relative;
