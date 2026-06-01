@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NLP Curriculum Dashboard & Interactive Learning Hub</title>
+  <!-- Tailwind is not used as per instruction; custom styles.css contains premium styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- App Wrapper Layout -->
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand-section">
+        <div class="brand-logo">N</div>
+        <div class="brand-info">
+          <h1>NLP Hub</h1>
+          <p>Course Dashboard</p>
+        </div>
+      </div>
+      
+      <ul class="nav-menu">
+        <li class="nav-item active">
+          <button data-tab="dashboard">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span class="card-icon-span">Dashboard</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button data-tab="syllabus">
+            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span class="card-icon-span">Syllabus & Units</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button data-tab="lessons">
+            <svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span class="card-icon-span">Lessons & Notes</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button data-tab="playgrounds">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span class="card-icon-span">Playgrounds</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button data-tab="tracker">
+            <svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <span class="card-icon-span">Progress Tracker</span>
+          </button>
+        </li>
+        <li class="nav-item">
+          <button data-tab="quiz">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <span class="card-icon-span">Knowledge Check</span>
+          </button>
+        </li>
+      </ul>
+      
+      <div class="sidebar-footer">
+        <p>Session 2025-26</p>
+        <p>Curriculum Platform v1.0</p>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- 1. DASHBOARD VIEW -->
+      <section id="dashboard" class="view-section active">
+        <div class="header-wrapper">
+          <div class="page-title">
+            <h2>Natural Language Processing</h2>
+            <p>Mastering foundations, representations, sequential models, translation attention, and generative LLMs.</p>
+          </div>
+          <div class="badge badge-indigo">Academic Year 2025-26</div>
+        </div>
+
+        <!-- Summary Cards Row -->
+        <div class="dashboard-grid">
+          <div class="dashboard-card">
+            <div class="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="card-info">
+              <h3>Course Chapters</h3>
+              <div class="stat-number">6 Units</div>
+            </div>
+          </div>
+          
+          <div class="dashboard-card">
+            <div class="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="card-info">
+              <h3>Practicals</h3>
+              <div class="stat-number">9 Experiments</div>
+            </div>
+          </div>
+          
+          <div class="dashboard-card">
+            <div class="card-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="card-info">
+              <h3>My Progress</h3>
+              <div class="stat-number" id="stat-progress-pct">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Course Outcomes panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              Course Learning Outcomes (COs)
+            </h3>
+            <span class="badge badge-cyan">Mapped Checklist</span>
+          </div>
+          
+          <div class="course-outcomes-grid" id="dashboard-co-grid">
+            <!-- Dynamic CO Cards -->
+          </div>
+        </div>
+
+        <!-- Introductory Card -->
+        <div class="panel" style="background: linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(168,85,247,0.06) 100%);">
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: white;">Welcome to the NLP Study Companion</h3>
+          <p style="color: var(--text-muted); font-size: 0.95rem;">
+            This interactive hub consolidates the entire course curriculum. Explore the theory modules inside the <strong>Syllabus</strong> tab, test algorithms through real-time <strong>Playgrounds</strong>, update completion checkmarks in the <strong>Progress Tracker</strong>, and self-assess using the <strong>Knowledge Check</strong>.
+          </p>
+        </div>
+      </section>
+
+      <!-- 2. SYLLABUS & CURRICULUM VIEW -->
+      <section id="syllabus" class="view-section">
+        <div class="header-wrapper">
+          <div class="page-title">
+            <h2>Course Syllabus</h2>
+            <p>Structured course contents across 6 units mapped to Outcomes and Reference Books.</p>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
+          <!-- Course Outcomes Reference -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Outcome Framework Mapping</h3>
+            </div>
+            <div class="course-outcomes-grid" id="syllabus-co-grid">
+              <!-- Loaded dynamically -->
+            </div>
+          </div>
+          
+          <!-- Units Accordions -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Theory Units I - VI</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted)">Click a header to expand unit contents.</p>
+            </div>
+            
+            <div class="units-container" id="units-accordion">
+              <!-- Units loaded dynamically -->
+            </div>
+          </div>
+
+          <!-- Textbooks Panel -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Required Literature & Reference Books</h3>
+            </div>
+            
+            <div class="books-grid">
+              <div class="book-card">
+                <div class="book-cover">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <div class="book-details">
+                  <span class="book-role">Core Textbook</span>
+                  <h4 class="book-title">Getting Started with Deep Learning for Natural Language Processing</h4>
+                  <p class="book-author">By Sunil Patel, BPB Publication, New Delhi</p>
+                </div>
+              </div>
+
+              <div class="book-card">
+                <div class="book-cover">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <div class="book-details">
+                  <span class="book-role">Reference Literature</span>
+                  <h4 class="book-title">Speech and Language Processing</h4>
+                  <p class="book-author">By Daniel Jurafsky, Pearson Education India</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2b. LESSONS & NOTES VIEW -->
+      <section id="lessons" class="view-section">
+        <div class="header-wrapper">
+          <div class="page-title">
+            <h2>Lessons &amp; Study Notes</h2>
+            <p>In-depth, exam-ready notes for every syllabus topic. Begin with Unit I foundations and text processing.</p>
+          </div>
+          <div class="badge badge-cyan" id="lesson-progress-badge">Unit I</div>
+        </div>
+
+        <!-- Unit selector pills -->
+        <div class="lesson-unit-tabs" id="lesson-unit-tabs">
+          <!-- Unit pills generated by app.js -->
+        </div>
+
+        <div class="lessons-layout">
+          <!-- Table of contents -->
+          <aside class="lesson-toc" id="lesson-toc">
+            <!-- TOC generated by app.js -->
+          </aside>
+
+          <!-- Lesson content -->
+          <div class="lesson-content" id="lesson-content">
+            <!-- Lesson sections generated by app.js -->
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. INTERACTIVE PLAYGROUNDS VIEW -->
+      <section id="playgrounds" class="view-section">
+        <div class="header-wrapper">
+          <div class="page-title">
+            <h2>Interactive Playgrounds</h2>
+            <p>Run simulated pipelines for word embeddings, sequential LSTMs, translations, and GPT-2 decoding.</p>
+          </div>
+        </div>
+
+        <div class="playground-container">
+          
+          <!-- Inner Nav -->
+          <nav class="playground-nav">
+            <button class="playground-nav-btn active" data-playground="preproc">
+              <span class="lbl">Experiment 1</span>
+              <span>Text Preprocessor & Vectorizer</span>
+            </button>
+            <button class="playground-nav-btn" data-playground="embeddings">
+              <span class="lbl">Experiments 2 & 3</span>
+              <span>Embeddings 2D Space</span>
+            </button>
+            <button class="playground-nav-btn" data-playground="cbow">
+              <span class="lbl">Experiment 3 (Training)</span>
+              <span>CBOW vs Skip-Gram</span>
+            </button>
+            <button class="playground-nav-btn" data-playground="lstm">
+              <span class="lbl">Experiment 4</span>
+              <span>LSTM Sequence Classifier</span>
+            </button>
+            <button class="playground-nav-btn" data-playground="translation">
+              <span class="lbl">Experiment 6</span>
+              <span>Attention Translator</span>
+            </button>
+            <button class="playground-nav-btn" data-playground="gpt">
+              <span class="lbl">Experiment 9</span>
+              <span>GPT-2 Decoder Tree</span>
+            </button>
+          </nav>
+          
+          <!-- Simulator Displays -->
+          <div style="flex-grow: 1;">
+            
+            <!-- Panel 1: Preprocessor -->
+            <div class="panel playground-panel active" id="playground-preproc">
+              <div class="panel-header">
+                <h3>NLP Text Preprocessing Pipeline</h3>
+              </div>
+              
+              <div class="input-group">
+                <label for="preproc-text-input">Raw Text Document Input</label>
+                <textarea id="preproc-text-input" class="input-control">Natural language processing represents document tokens using Bag-of-Words and TF-IDF vectors.</textarea>
+              </div>
+              
+              <button class="btn btn-primary" id="run-preproc-btn" style="margin-bottom: 1.5rem;">Execute Preprocessing</button>
+              
+              <div style="margin-bottom: 1.5rem;">
+                <h5 style="color: white; font-weight: 600; margin-bottom: 0.5rem;">Token Pipeline Stages</h5>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 0.5rem;">
+                  Displays lowercasing, punctuation removal, stemming, lemmatization, and stop-word status.
+                </p>
+                <div class="tokens-container" id="preproc-tokens">
+                  <!-- Token tags filled by app.js -->
+                </div>
+              </div>
+              
+              <div>
+                <h5 style="color: white; font-weight: 600; margin-bottom: 0.5rem;">BoW & TF-IDF Numerical Vector Table</h5>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 1rem;">
+                  Comparison matrix between User Input and sample reference document indexes in the corpus.
+                </p>
+                <div class="attention-heatmap-wrapper">
+                  <table class="attention-table">
+                    <thead>
+                      <tr id="preproc-vocab-headers">
+                        <!-- Headers filled by app.js -->
+                      </tr>
+                    </thead>
+                    <tbody id="preproc-matrix-body">
+                      <!-- Cell scores filled by app.js -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Panel 2: Vector Space Explorer -->
+            <div class="panel playground-panel" id="playground-embeddings">
+              <div class="panel-header">
+                <h3>Embeddings 2D Vector Space Explorer</h3>
+              </div>
+              
+              <div class="visualization-grid">
+                
+                <!-- Graph Canvas -->
+                <div>
+                  <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+                    2D Scatter plot representing word coordinates. Hover/Click points to calculate cosine similarities.
+                  </p>
+                  <div class="canvas-container">
+                    <canvas id="embeddings-canvas"></canvas>
+                  </div>
+                </div>
+                
+                <!-- Side Panel Math controls -->
+                <div class="vector-sidebar">
+                  <div class="vector-legend">
+                    <h5 style="color: white; font-size: 0.85rem; margin-bottom: 0.75rem;">Category Guide</h5>
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: var(--secondary-color)"></div>
+                      <span>Royalty (King, Queen)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: var(--accent-cyan)"></div>
+                      <span>Technology (AI, Software)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: var(--success)"></div>
+                      <span>Nature (Forest, River)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: var(--accent-pink)"></div>
+                      <span>Emotion (Love, Happy)</span>
+                    </div>
+                    <div class="legend-item">
+                      <div class="legend-color" style="background: #e2e8f0"></div>
+                      <span>Gender (Man, Woman)</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Cosine Similarity Output Panel -->
+                  <div class="panel" style="padding: 1.25rem; margin-bottom: 0;" id="similarity-output-box">
+                    <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">
+                      Click any word dot on the graph to display cosine relationships.
+                    </div>
+                  </div>
+                  
+                  <!-- Analogy Solver Box -->
+                  <div class="panel" style="padding: 1.25rem; margin-bottom: 0;">
+                    <h4 style="color: white; font-size: 0.95rem; margin-bottom: 0.75rem;">Analogy Solver Model</h4>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 1rem;">
+                      Test embedding semantics e.g., <strong>king - man + woman = queen</strong>
+                    </p>
+                    
+                    <div style="display: flex; align-items: center; gap: 0.4rem; margin-bottom: 1rem;">
+                      <input type="text" id="analogy-a" class="input-control" value="king" style="width: 60px; padding: 0.4rem; text-align:center; font-size:0.85rem">
+                      <span style="color: var(--text-muted)">-</span>
+                      <input type="text" id="analogy-b" class="input-control" value="man" style="width: 60px; padding: 0.4rem; text-align:center; font-size:0.85rem">
+                      <span style="color: var(--text-muted)">+</span>
+                      <input type="text" id="analogy-c" class="input-control" value="woman" style="width: 65px; padding: 0.4rem; text-align:center; font-size:0.85rem">
+                    </div>
+                    
+                    <button class="btn btn-primary" id="run-analogy-btn" style="width: 100%; padding: 0.5rem;">Solve Analogy</button>
+                    
+                    <div style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.75rem; text-align: center;">
+                      <div style="font-size: 0.75rem; color: var(--text-muted)">NEAREST RESULT WORD:</div>
+                      <div id="analogy-result-word" style="font-size: 1.4rem; font-weight: 800; color: var(--accent-cyan); margin: 0.25rem 0;">-</div>
+                      <div id="analogy-result-conf" style="font-size: 0.7rem; color: var(--text-muted)">-</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Panel 3: CBOW vs Skipgram window sliding -->
+            <div class="panel playground-panel" id="playground-cbow">
+              <div class="panel-header">
+                <h3>CBOW & Skip-Gram Sliding Window</h3>
+              </div>
+              
+              <div class="input-group">
+                <label for="cbow-text-input">Corpus Sentence Input</label>
+                <input type="text" id="cbow-text-input" class="input-control" value="the quick brown fox jumps over the lazy dog">
+              </div>
+              
+              <div class="input-group" style="flex-direction: row; gap: 2rem;">
+                <div>
+                  <label for="cbow-mode">Model Formulation</label>
+                  <select id="cbow-mode" class="input-control" style="width: 200px;" onchange="renderCbowWindow()">
+                    <option value="cbow">Continuous Bag of Words (CBOW)</option>
+                    <option value="skipgram">Skip-Gram Model</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div class="math-display" id="cbow-math-description">
+                CBOW Model: Context words context(w) are inputs, target word w(t) is predicted label.
+              </div>
+              
+              <div style="margin: 2rem 0;">
+                <h5 style="color: white; margin-bottom: 1rem;">Sliding Window Animation</h5>
+                <div class="cbow-animation-box" id="cbow-node-display">
+                  <!-- Word nodes loaded dynamically -->
+                </div>
+              </div>
+              
+              <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem;">
+                <button class="btn btn-secondary" onclick="stepCbow(-1)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                  Previous Word
+                </button>
+                <button class="btn btn-secondary" onclick="stepCbow(1)">
+                  Next Word
+                  <svg width="18" height="18" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+              
+              <div id="cbow-pairs-output" class="panel" style="background: rgba(0,0,0,0.1); margin-bottom:0;">
+                <!-- Pairs listed by app.js -->
+              </div>
+            </div>
+            
+            <!-- Panel 4: LSTM Sentiment Classifier -->
+            <div class="panel playground-panel" id="playground-lstm">
+              <div class="panel-header">
+                <h3>Recurrent Models: LSTM Sentiment Visualizer</h3>
+              </div>
+              
+              <div class="input-group">
+                <label for="lstm-sentence-input">Review Sentence for Classification</label>
+                <input type="text" id="lstm-sentence-input" class="input-control" value="the movie was absolutely fantastic and brilliant but it was a bit too long">
+              </div>
+              
+              <button class="btn btn-primary" id="lstm-start-btn" style="margin-bottom: 1.5rem;">Run Sequence Model</button>
+              
+              <div class="lstm-visualizer">
+                <h5 style="color: white;">Sequence Processing Graph</h5>
+                <div class="sequence-flow" id="lstm-seq-flow">
+                  <!-- Steps loaded by app.js -->
+                </div>
+                
+                <div class="flow-gate-signals">
+                  <div class="gate-indicator">
+                    <span class="gate-label">Forget Gate (f<sub>t</sub>)</span>
+                    <div class="gate-progress-bar">
+                      <div class="gate-fill" id="gate-f-fill"></div>
+                    </div>
+                  </div>
+                  <div class="gate-indicator">
+                    <span class="gate-label">Input Gate (i<sub>t</sub>)</span>
+                    <div class="gate-progress-bar">
+                      <div class="gate-fill" id="gate-i-fill"></div>
+                    </div>
+                  </div>
+                  <div class="gate-indicator">
+                    <span class="gate-label">Candidate State (C~<sub>t</sub>)</span>
+                    <div class="gate-progress-bar">
+                      <div class="gate-fill" id="gate-c-fill"></div>
+                    </div>
+                  </div>
+                  <div class="gate-indicator">
+                    <span class="gate-label">Output Gate (o<sub>t</sub>)</span>
+                    <div class="gate-progress-bar">
+                      <div class="gate-fill" id="gate-o-fill"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div id="lstm-output-text" class="panel" style="background: rgba(0,0,0,0.3); margin-bottom:0; font-size: 0.95rem; text-align: center;">
+                  Click 'Run Sequence Model' to step through sentence word-by-word and watch LSTM gating signals update.
+                </div>
+              </div>
+            </div>
+            
+            <!-- Panel 5: Attention Seq2Seq Translator -->
+            <div class="panel playground-panel" id="playground-translation">
+              <div class="panel-header">
+                <h3>Seq2Seq Attention Translation Heatmap</h3>
+              </div>
+              
+              <div class="input-group">
+                <label for="translation-sentence-select">Select a Standard Test Sentence</label>
+                <select id="translation-sentence-select" class="input-control">
+                  <option value="the cat sat on the mat">"the cat sat on the mat" (Nouns and Prepositions)</option>
+                  <option value="natural language processing is fun">"natural language processing is fun" (Grammar Adjective Inversion)</option>
+                  <option value="deep learning sequence models are powerful">"deep learning sequence models are powerful" (Long Sequence Alignment)</option>
+                </select>
+              </div>
+              
+              <div class="input-group">
+                <label for="translation-input">Or Edit Source Sentence</label>
+                <input type="text" id="translation-input" class="input-control" value="the cat sat on the mat">
+              </div>
+              
+              <button class="btn btn-primary" id="translate-btn" style="margin-bottom: 1.5rem;">Translate Sentence</button>
+              
+              <div id="translation-output-text" style="background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 2rem;">
+                <!-- Translated output text goes here -->
+              </div>
+              
+              <div>
+                <h5 style="color: white; margin-bottom: 0.75rem;">Attention Alignment Heatmap Matrix</h5>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 1rem;">
+                  Cells indicate attention probability score. Hover cells to read contextual source-target alignment weights.
+                </p>
+                <div class="attention-heatmap-wrapper">
+                  <table class="attention-table" id="attention-grid-table">
+                    <!-- Attention matrix generated by app.js -->
+                  </table>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Panel 6: GPT Generation strategies -->
+            <div class="panel playground-panel" id="playground-gpt">
+              <div class="panel-header">
+                <h3>Generative NLP: GPT Decoding Strategies</h3>
+              </div>
+              
+              <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); padding:1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+                <strong>Prompt Seed:</strong> <span style="font-family: var(--font-mono); color: var(--accent-cyan);">"Artificial intelligence is"</span>
+              </div>
+              
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div class="input-group">
+                  <label for="gpt-strategy">Decoding Strategy</label>
+                  <select id="gpt-strategy" class="input-control" onchange="runGPTDecodingSimulation()">
+                    <option value="greedy">Greedy Search (Max Probability)</option>
+                    <option value="topk">Top-K Sampling</option>
+                    <option value="nucleus">Nucleus (Top-p) Sampling</option>
+                  </select>
+                </div>
+                
+                <div class="input-group" id="param-k-wrapper" style="display: none;">
+                  <label for="gpt-k-param">Select K Value</label>
+                  <select id="gpt-k-param" class="input-control" onchange="runGPTDecodingSimulation()">
+                    <option value="2">K = 2 (Highly focused)</option>
+                    <option value="3" selected>K = 3 (Balanced)</option>
+                    <option value="4">K = 4 (Diverse)</option>
+                  </select>
+                </div>
+                
+                <div class="input-group" id="param-p-wrapper" style="display: none;">
+                  <label for="gpt-p-param">Select Threshold p</label>
+                  <select id="gpt-p-param" class="input-control" onchange="runGPTDecodingSimulation()">
+                    <option value="0.5">p = 0.50 (Concentrated)</option>
+                    <option value="0.85" selected>p = 0.85 (Standard)</option>
+                    <option value="0.95">p = 0.95 (High creativity)</option>
+                  </select>
+                </div>
+              </div>
+              
+              <button class="btn btn-primary" id="gpt-decode-btn" style="margin-bottom: 1.5rem;">Generate Text Sequence</button>
+              
+              <div id="gpt-generated-text" style="background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 2rem;">
+                <!-- Output text generated -->
+              </div>
+              
+              <div>
+                <h5 style="color: white; margin-bottom: 0.75rem;">Autoregressive Prediction Candidate Tree (Steps t=1 to 3)</h5>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom: 1.25rem;">
+                  Displays candidates at each time-step. Colored nodes indicate chosen paths. Faded nodes represent masked/ineligible options under selected sampling filters.
+                </p>
+                <div class="decoding-tree-container" id="gpt-tree-steps">
+                  <!-- Nodes generated by app.js -->
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. PROGRESS TRACKER VIEW -->
+      <section id="tracker" class="view-section">
+        <div class="header-wrapper">
+          <div class="page-title">
+            <h2>Progress Tracker</h2>
+            <p>Check off curriculum modules and practical experiments. Completion states persist in local storage.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="resetProgress()">Reset Progress Logs</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 340px; gap: 2rem; align-items: start;">
+          <!-- Checklist -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3>Curriculum Completion Checklist</h3>
+            </div>
+            <div class="tracker-list" id="checklist-container">
+              <!-- Checkboxes dynamically generated by app.js -->
+            </div>
+          </div>
+          
+          <!-- Side Stats details -->
+          <div>
+            <div class="panel">
+              <h3 style="font-size: 1.15rem; color: white; margin-bottom: 1rem;">Tracking Metrics</h3>
+              
+              <div style="text-align: center; margin: 1.5rem 0;">
+                <div id="completion-percent" style="font-size: 3.5rem; font-weight: 800; background: var(--pink-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">0%</div>
+                <div id="completion-count" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">0 of 15 modules complete</div>
+              </div>
+              
+              <div class="quiz-progress-bar" style="margin-bottom: 1.5rem;">
+                <div class="quiz-progress-fill" id="completion-bar" style="width: 0%;"></div>
+              </div>
+              
+              <p style="font-size: 0.8rem; color: var(--text-muted);">
+                Toggling checkbox items updates your dashboard status meters. This helps you track topics left before the examination cycle.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. KNOWLEDGE CHECK VIEW -->
+      <section id="quiz" class="view-section">
+        <div class="header-wrapper">
+          <div class="page-title">
+            <h2>Knowledge Assessment</h2>
+            <p>Test your comprehension of NLP theories, recurrent networks, attention vectors, and decoding matrices.</p>
+          </div>
+        </div>
+
+        <div class="quiz-wrapper">
+          <div class="quiz-card" id="active-quiz-card">
+            <!-- Loaded dynamically by app.js -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast Notification Wrapper -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Scripts linking -->
+  <script src="simulators.js"></script>
+  <script src="app.js"></script>
+  <script src="lessons.js"></script>
+</body>
+</html>
