@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Interactive Simulators Setup
   initSimulatorsUI();
+
+  // Global search / command palette
+  initCommandPalette();
 });
 
 // --- navigation routing ---
@@ -1528,4 +1531,192 @@ function runBertClassification() {
   document.getElementById('bert-bert-note').textContent = hasNegation
     ? 'Contextual embeddings capture the negation.'
     : 'Reads context around each sentiment word.';
+}
+
+// ============================================================
+// Command Palette / Global Search (⌘K)
+// ============================================================
+
+let CMDK_INDEX = null;
+
+function buildSearchIndex() {
+  const idx = [];
+
+  // Top-level views
+  const views = [
+    { tab: 'dashboard',  title: 'Dashboard',   subtitle: 'Overview & progress',  keywords: 'home overview start' },
+    { tab: 'syllabus',   title: 'Syllabus',    subtitle: 'Outcomes, units, labs', keywords: 'course outcomes units experiments practicals' },
+    { tab: 'lessons',    title: 'Lessons',     subtitle: 'Full unit notes',       keywords: 'notes read study units theory' },
+    { tab: 'playgrounds',title: 'Playgrounds', subtitle: 'Interactive labs',      keywords: 'interactive demo simulator practical run' },
+    { tab: 'tracker',    title: 'Progress Tracker', subtitle: 'Mark units complete', keywords: 'progress complete checklist' },
+    { tab: 'quiz',       title: 'Quiz',        subtitle: 'Test yourself',         keywords: 'test questions practice exam' },
+  ];
+  views.forEach(v => idx.push({
+    kind: 'view', kindLabel: 'Go to', title: v.title, subtitle: v.subtitle,
+    keywords: v.keywords, action: () => window.navigateToView(v.tab),
+  }));
+
+  // Lessons: units + every section
+  if (typeof LESSONS_DATA !== 'undefined') {
+    LESSONS_DATA.forEach(u => {
+      idx.push({
+        kind: 'unit', kindLabel: u.num, title: u.title,
+        subtitle: 'Unit overview', keywords: (u.intro || '') + ' ' + u.num,
+        action: () => window.goToLesson(u.id),
+      });
+      (u.sections || []).forEach(s => {
+        idx.push({
+          kind: 'lesson', kindLabel: 'Lesson', title: s.title,
+          subtitle: `${u.num} · ${s.group || ''}`.trim(),
+          keywords: (s.group || '') + ' ' + u.num + ' ' + u.title,
+          action: () => window.goToLesson(u.id, s.id),
+        });
+      });
+    });
+  }
+
+  // Practicals → playgrounds
+  const practicalPanels = ['preproc','embeddings','cbow','embeddings','lstm','ner','translation','summarization','bert','gpt'];
+  const practicalTitles = [
+    'Text preprocessing & BoW / TF-IDF',
+    'Pretrained embeddings + PCA / t-SNE',
+    'Train CBOW & Skip-Gram',
+    'GloVe semantic category clusters',
+    'LSTM sentiment vs BoW / TF-IDF',
+    'BiLSTM Named Entity Recognition',
+    'Seq2seq attention translation',
+    'Attention summarization + ROUGE',
+    'Fine-tune BERT sentiment',
+    'GPT-2 decoding strategies',
+  ];
+  practicalTitles.forEach((t, i) => idx.push({
+    kind: 'practical', kindLabel: `Lab ${i + 1}`, title: t,
+    subtitle: 'Interactive practical', keywords: 'practical lab experiment ' + practicalPanels[i],
+    action: () => window.goToPlayground(practicalPanels[i]),
+  }));
+
+  return idx;
+}
+
+function searchIndex(index, q) {
+  q = (q || '').trim().toLowerCase();
+  if (!q) return index.slice(0, 8);
+  const terms = q.split(/\s+/).filter(Boolean);
+  const scored = [];
+  index.forEach(it => {
+    const title = it.title.toLowerCase();
+    const hay = title + ' ' + (it.kindLabel + ' ' + it.subtitle + ' ' + it.keywords).toLowerCase();
+    let score = 0, ok = true;
+    for (const term of terms) {
+      if (title.includes(term)) score += 2;
+      else if (hay.includes(term)) score += 1;
+      else { ok = false; break; }
+    }
+    if (ok && score > 0) scored.push({ it, score });
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, 12).map(s => s.it);
+}
+
+function initCommandPalette() {
+  const overlay = document.getElementById('cmdk-overlay');
+  const input = document.getElementById('cmdk-input');
+  const results = document.getElementById('cmdk-results');
+  if (!overlay || !input || !results) return;
+
+  CMDK_INDEX = buildSearchIndex();
+  let current = [];
+  let active = 0;
+
+  const isOpen = () => !overlay.hidden;
+
+  function render(q) {
+    current = searchIndex(CMDK_INDEX, q);
+    active = 0;
+    if (!current.length) {
+      results.innerHTML = '<li class="cmdk-empty">No matches found</li>';
+      return;
+    }
+    results.innerHTML = current.map((it, i) => `
+      <li class="cmdk-item${i === 0 ? ' active' : ''}" data-i="${i}" role="option">
+        <span class="cmdk-kind cmdk-kind-${it.kind}">${it.kindLabel}</span>
+        <span class="cmdk-text">
+          <span class="cmdk-title">${escapeHtml(it.title)}</span>
+          <span class="cmdk-sub">${escapeHtml(it.subtitle)}</span>
+        </span>
+        <span class="cmdk-enter">↵</span>
+      </li>`).join('');
+    results.querySelectorAll('.cmdk-item').forEach(el => {
+      el.addEventListener('mouseenter', () => setActive(parseInt(el.dataset.i)));
+      el.addEventListener('click', () => exec(parseInt(el.dataset.i)));
+    });
+  }
+
+  function setActive(i) {
+    active = i;
+    results.querySelectorAll('.cmdk-item').forEach((el, idx) => {
+      el.classList.toggle('active', idx === i);
+      if (idx === i) el.scrollIntoView({ block: 'nearest' });
+    });
+  }
+
+  function move(d) {
+    if (!current.length) return;
+    setActive((active + d + current.length) % current.length);
+  }
+
+  function exec(i) {
+    const it = current[i];
+    if (!it) return;
+    close();
+    if (typeof it.action === 'function') it.action();
+  }
+
+  function open() {
+    if (isOpen()) return;
+    overlay.hidden = false;
+    document.body.classList.add('cmdk-open');
+    input.value = '';
+    render('');
+    setTimeout(() => input.focus(), 20);
+  }
+
+  function close() {
+    if (!isOpen()) return;
+    overlay.hidden = true;
+    document.body.classList.remove('cmdk-open');
+    input.blur();
+  }
+
+  input.addEventListener('input', () => render(input.value));
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); move(1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1); }
+    else if (e.key === 'Enter') { e.preventDefault(); exec(active); }
+    else if (e.key === 'Escape') { e.preventDefault(); close(); }
+  });
+
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+      e.preventDefault();
+      isOpen() ? close() : open();
+    } else if (e.key === '/' && !isOpen()) {
+      const t = document.activeElement;
+      const typing = t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable);
+      if (!typing) { e.preventDefault(); open(); }
+    }
+  });
+
+  const sideBtn = document.getElementById('sidebar-search-btn');
+  if (sideBtn) sideBtn.addEventListener('click', open);
+  const fab = document.getElementById('cmdk-fab');
+  if (fab) fab.addEventListener('click', open);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
 }
