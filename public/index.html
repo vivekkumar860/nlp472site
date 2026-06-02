@@ -48,6 +48,12 @@
           </button>
         </li>
         <li class="nav-item">
+          <button data-tab="assistant" data-label="Ask AI">
+            <svg viewBox="0 0 24 24"><path d="M12 3l1.9 4.8L18 9l-4.1 1.2L12 15l-1.9-4.8L6 9l4.1-1.2L12 3z"/><path d="M19 14.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>
+            <span class="card-icon-span">Study Assistant</span>
+          </button>
+        </li>
+        <li class="nav-item">
           <button data-tab="playgrounds" data-label="Play">
             <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             <span class="card-icon-span">Playgrounds</span>
@@ -936,6 +942,38 @@
           <div class="quiz-card" id="active-quiz-card">
             <!-- Loaded dynamically by app.js -->
           </div>
+        </div>
+      </section>
+
+      <!-- 6. STUDY ASSISTANT VIEW -->
+      <section id="assistant" class="view-section">
+        <div class="header-wrapper">
+          <div class="page-title">
+            <h2>NLP Study Assistant</h2>
+            <p>Ask anything about the course. Answers are retrieved from your own lesson notes using TF-IDF + cosine similarity — entirely in your browser, no internet required.</p>
+          </div>
+        </div>
+
+        <div class="assistant-wrapper">
+          <div class="assistant-ask-card">
+            <div class="assistant-input-row">
+              <svg class="assistant-spark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.9 4.8L18 9l-4.1 1.2L12 15l-1.9-4.8L6 9l4.1-1.2L12 3z"/></svg>
+              <input id="assistant-input" type="text" placeholder="e.g. What is self-attention? How does TF-IDF work?" autocomplete="off" spellcheck="false">
+              <button id="assistant-ask-btn" class="assistant-ask-btn">Ask</button>
+            </div>
+            <div class="assistant-chips" id="assistant-seed-chips"></div>
+            <div class="assistant-history-row" id="assistant-history-row" hidden>
+              <span class="assistant-history-label">Recent</span>
+              <div class="assistant-chips" id="assistant-history-chips"></div>
+            </div>
+          </div>
+
+          <div id="assistant-results" class="assistant-results" aria-live="polite"></div>
+
+          <details class="assistant-how">
+            <summary>How this works</summary>
+            <p>The assistant builds a <strong>bag-of-words TF-IDF index</strong> over every lesson section the moment you open it. When you ask a question, your words are tokenized and stemmed, weighted by inverse document frequency, and compared to each lesson passage with <strong>cosine similarity</strong>. The best-matching passage is shown and the most relevant sentences are extracted as the answer. This is the exact pipeline you study in <strong>Unit I</strong> and build in <strong>Practical 1</strong> — the site is, quite literally, using NLP to teach NLP.</p>
+          </details>
         </div>
       </section>
 

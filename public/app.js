@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global search / command palette
   initCommandPalette();
+
+  // NLP Study Assistant
+  initStudyAssistant();
 });
 
 // --- navigation routing ---
@@ -1547,6 +1550,7 @@ function buildSearchIndex() {
     { tab: 'dashboard',  title: 'Dashboard',   subtitle: 'Overview & progress',  keywords: 'home overview start' },
     { tab: 'syllabus',   title: 'Syllabus',    subtitle: 'Outcomes, units, labs', keywords: 'course outcomes units experiments practicals' },
     { tab: 'lessons',    title: 'Lessons',     subtitle: 'Full unit notes',       keywords: 'notes read study units theory' },
+    { tab: 'assistant',  title: 'Study Assistant', subtitle: 'Ask questions, get answers', keywords: 'ask ai chat search question answer help tf-idf' },
     { tab: 'playgrounds',title: 'Playgrounds', subtitle: 'Interactive labs',      keywords: 'interactive demo simulator practical run' },
     { tab: 'tracker',    title: 'Progress Tracker', subtitle: 'Mark units complete', keywords: 'progress complete checklist' },
     { tab: 'quiz',       title: 'Quiz',        subtitle: 'Test yourself',         keywords: 'test questions practice exam' },
@@ -1720,3 +1724,277 @@ function escapeHtml(s) {
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[c]));
 }
+
+// ============================================================
+// NLP Study Assistant — client-side TF-IDF retrieval Q&A
+// ============================================================
+
+let ASSISTANT_INDEX = null;        // { docs: [...], idf: Map }
+const ASSISTANT_HISTORY_KEY = 'nlp_hub_assistant_history';
+const ASSISTANT_SEEDS = [
+  'What is tokenization?',
+  'Explain TF-IDF',
+  'What is self-attention?',
+  'RNN vs LSTM',
+  'How does BERT work?',
+  'What is beam search?',
+];
+
+function nlpTokens(text) {
+  const eng = window.nlpEngine || {};
+  const tokenize = eng.cleanAndTokenize || ((t) => t.toLowerCase().split(/\s+/));
+  const stop = eng.STOPWORDS || new Set();
+  const stem = eng.stemWord || ((w) => w);
+  const out = [];
+  tokenize(text).forEach(raw => {
+    const w = raw.toLowerCase();
+    if (w.length < 2) return;
+    if (stop.has(w)) return;
+    out.push(stem(w));
+  });
+  return out;
+}
+
+function htmlToText(html) {
+  const tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  return (tmp.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function buildAssistantIndex() {
+  if (ASSISTANT_INDEX) return ASSISTANT_INDEX;
+  if (typeof LESSONS_DATA === 'undefined') return null;
+
+  const docs = [];
+  LESSONS_DATA.forEach(unit => {
+    (unit.sections || []).forEach(sec => {
+      if (!sec || !sec.html) return;
+      const plain = htmlToText(sec.html);
+      if (!plain) return;
+      // Weight title and group higher by repeating them in the term stream.
+      const titleTokens = nlpTokens(sec.title || '');
+      const weighted = [].concat(titleTokens, titleTokens, titleTokens, nlpTokens(sec.group || ''), nlpTokens(plain));
+      const tf = new Map();
+      weighted.forEach(t => tf.set(t, (tf.get(t) || 0) + 1));
+      docs.push({
+        unitId: unit.id,
+        unitNum: unit.num,
+        sectionId: sec.id,
+        group: sec.group || '',
+        title: sec.title || '',
+        plain,
+        tf,
+      });
+    });
+  });
+
+  // Document frequency + IDF
+  const df = new Map();
+  docs.forEach(d => { d.tf.forEach((_, term) => df.set(term, (df.get(term) || 0) + 1)); });
+  const N = docs.length || 1;
+  const idf = new Map();
+  df.forEach((freq, term) => idf.set(term, Math.log(N / (1 + freq)) + 1));
+
+  // Per-doc TF-IDF vector + L2 norm
+  docs.forEach(d => {
+    const vec = new Map();
+    let sumSq = 0;
+    d.tf.forEach((count, term) => {
+      const w = (1 + Math.log(count)) * (idf.get(term) || 0);
+      if (w > 0) { vec.set(term, w); sumSq += w * w; }
+    });
+    d.vec = vec;
+    d.norm = Math.sqrt(sumSq) || 1;
+  });
+
+  ASSISTANT_INDEX = { docs, idf };
+  return ASSISTANT_INDEX;
+}
+
+function queryVector(idf, qTokens) {
+  const tf = new Map();
+  qTokens.forEach(t => tf.set(t, (tf.get(t) || 0) + 1));
+  const vec = new Map();
+  let sumSq = 0;
+  tf.forEach((count, term) => {
+    const w = (1 + Math.log(count)) * (idf.get(term) || 0);
+    if (w > 0) { vec.set(term, w); sumSq += w * w; }
+  });
+  return { vec, norm: Math.sqrt(sumSq) || 1 };
+}
+
+function cosineSparse(aVec, aNorm, bVec, bNorm) {
+  let small = aVec, large = bVec;
+  if (aVec.size > bVec.size) { small = bVec; large = aVec; }
+  let dot = 0;
+  small.forEach((w, term) => { const o = large.get(term); if (o) dot += w * o; });
+  return dot / (aNorm * bNorm);
+}
+
+function extractAnswer(doc, qTokens) {
+  const idf = ASSISTANT_INDEX.idf;
+  const qSet = new Set(qTokens);
+  const sentences = doc.plain.split(/(?<=[.!?])\s+(?=[A-Z0-9])/).filter(s => s.trim().length > 20);
+  if (!sentences.length) return doc.plain.slice(0, 320);
+  let best = [];
+  sentences.forEach((s, i) => {
+    const toks = nlpTokens(s);
+    let score = 0;
+    const seen = new Set();
+    toks.forEach(t => { if (qSet.has(t) && !seen.has(t)) { seen.add(t); score += (idf.get(t) || 1); } });
+    best.push({ s: s.trim(), score, i });
+  });
+  best.sort((a, b) => b.score - a.score || a.i - b.i);
+  if (best[0].score === 0) return sentences.slice(0, 2).join(' ').slice(0, 320);
+  const picked = best.filter(b => b.score > 0).slice(0, 3).sort((a, b) => a.i - b.i);
+  let out = '';
+  for (const p of picked) {
+    if (out.length + p.s.length > 380 && out.length > 0) break;
+    out += (out ? ' ' : '') + p.s;
+  }
+  return out;
+}
+
+function answerQuestion(q) {
+  const idx = buildAssistantIndex();
+  if (!idx) return null;
+  const qTokens = nlpTokens(q || '');
+  if (!qTokens.length) return { empty: true, qTokens };
+  const { vec, norm } = queryVector(idx.idf, qTokens);
+  if (!vec.size) return { empty: true, qTokens };
+
+  const scored = idx.docs.map(d => ({ doc: d, score: cosineSparse(vec, norm, d.vec, d.norm) }))
+    .filter(x => x.score > 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (!scored.length) return { noMatch: true, qTokens };
+
+  const top = scored[0];
+  const snippet = extractAnswer(top.doc, qTokens);
+  const related = scored.slice(1, 4).map(x => ({
+    unitId: x.doc.unitId, unitNum: x.doc.unitNum, sectionId: x.doc.sectionId,
+    title: x.doc.title, score: x.score,
+  }));
+  return {
+    snippet,
+    score: top.score,
+    source: { unitId: top.doc.unitId, unitNum: top.doc.unitNum, sectionId: top.doc.sectionId, title: top.doc.title, group: top.doc.group },
+    related,
+    corpusSize: idx.docs.length,
+    qTokens,
+  };
+}
+
+function confidenceLabel(score) {
+  if (score >= 0.35) return { label: 'High', cls: 'high' };
+  if (score >= 0.18) return { label: 'Medium', cls: 'med' };
+  return { label: 'Low', cls: 'low' };
+}
+
+function loadAssistantHistory() {
+  try { return JSON.parse(localStorage.getItem(ASSISTANT_HISTORY_KEY) || '[]'); }
+  catch (e) { return []; }
+}
+
+function saveAssistantHistory(q) {
+  let hist = loadAssistantHistory().filter(h => h.toLowerCase() !== q.toLowerCase());
+  hist.unshift(q);
+  hist = hist.slice(0, 8);
+  try { localStorage.setItem(ASSISTANT_HISTORY_KEY, JSON.stringify(hist)); } catch (e) {}
+  return hist;
+}
+
+function renderAssistantHistory() {
+  const row = document.getElementById('assistant-history-row');
+  const wrap = document.getElementById('assistant-history-chips');
+  if (!row || !wrap) return;
+  const hist = loadAssistantHistory();
+  if (!hist.length) { row.hidden = true; return; }
+  row.hidden = false;
+  wrap.innerHTML = hist.map(h => `<button class="assistant-chip assistant-chip-hist" data-q="${escapeHtml(h)}">${escapeHtml(h)}</button>`).join('');
+}
+
+function renderAssistantAnswer(q, res) {
+  const out = document.getElementById('assistant-results');
+  if (!out) return;
+
+  if (!res || res.empty) {
+    out.innerHTML = `<div class="assistant-answer-card assistant-fallback"><p>Type a question about NLP — try one of the suggestions above.</p></div>`;
+    return;
+  }
+  if (res.noMatch) {
+    out.innerHTML = `<div class="assistant-answer-card assistant-fallback">
+      <p><strong>No matching passage found.</strong> Try rephrasing with course terms like <em>embeddings, attention, transformer, tokenization, decoding</em>.</p>
+    </div>`;
+    return;
+  }
+
+  const conf = confidenceLabel(res.score);
+  const src = res.source;
+  const related = res.related.map(r => `
+    <button class="assistant-source-chip" onclick="goToLesson(${r.unitId}, '${r.sectionId}')">
+      <span class="assistant-src-unit">${escapeHtml(r.unitNum)}</span>
+      <span class="assistant-src-title">${escapeHtml(r.title)}</span>
+    </button>`).join('');
+
+  out.innerHTML = `
+    <div class="assistant-answer-card">
+      <div class="assistant-answer-head">
+        <span class="assistant-q">${escapeHtml(q)}</span>
+        <span class="assistant-conf assistant-conf-${conf.cls}">${conf.label} match</span>
+      </div>
+      <p class="assistant-snippet">${escapeHtml(res.snippet)}</p>
+      <div class="assistant-primary-source">
+        <div class="assistant-src-meta">
+          <span class="assistant-src-unit">${escapeHtml(src.unitNum)}</span>
+          <span class="assistant-src-title">${escapeHtml(src.title)}</span>
+        </div>
+        <button class="assistant-open-btn" onclick="goToLesson(${src.unitId}, '${src.sectionId}')">Open lesson →</button>
+      </div>
+      ${related.length ? `<div class="assistant-related"><span class="assistant-related-label">Related passages</span><div class="assistant-source-chips">${related}</div></div>` : ''}
+      <p class="assistant-transparency">Answered with TF-IDF retrieval + cosine similarity over ${res.corpusSize} lesson passages — the technique from Unit I &amp; Practical 1.</p>
+    </div>`;
+}
+
+function runAssistantQuery(q) {
+  q = (q || '').trim();
+  if (!q) return;
+  const input = document.getElementById('assistant-input');
+  if (input) input.value = q;
+  const res = answerQuestion(q);
+  renderAssistantAnswer(q, res);
+  if (res && !res.empty && !res.noMatch) { saveAssistantHistory(q); renderAssistantHistory(); }
+}
+
+function initStudyAssistant() {
+  const input = document.getElementById('assistant-input');
+  const askBtn = document.getElementById('assistant-ask-btn');
+  const seedWrap = document.getElementById('assistant-seed-chips');
+  if (!input || !seedWrap) return;
+
+  seedWrap.innerHTML = ASSISTANT_SEEDS.map(s => `<button class="assistant-chip" data-q="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join('');
+
+  // Build index in the background so the first question is instant
+  setTimeout(buildAssistantIndex, 200);
+
+  if (askBtn) askBtn.addEventListener('click', () => runAssistantQuery(input.value));
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runAssistantQuery(input.value); } });
+
+  const view = document.getElementById('assistant');
+  if (view) view.addEventListener('click', (e) => {
+    const chip = e.target.closest('.assistant-chip');
+    if (chip && chip.dataset.q) runAssistantQuery(chip.dataset.q);
+  });
+
+  renderAssistantHistory();
+}
+
+window.goToAssistant = function(prefill) {
+  if (window.navigateToView) window.navigateToView('assistant', { silent: true });
+  const input = document.getElementById('assistant-input');
+  setTimeout(() => {
+    if (input) input.focus();
+    if (prefill) runAssistantQuery(prefill);
+  }, 120);
+  if (window.showToast) window.showToast('Opened Study Assistant');
+};
