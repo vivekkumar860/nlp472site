@@ -2076,7 +2076,8 @@ table.attention-table td.word-label {
   }
 
   .brand-section,
-  .sidebar-footer {
+  .sidebar-footer,
+  .sidebar-search {
     display: none;
   }
 
@@ -2123,10 +2124,14 @@ table.attention-table td.word-label {
 
   .nav-item button::after {
     content: attr(data-label);
-    font-size: 0.62rem;
+    font-size: 0.6rem;
     font-weight: 600;
-    letter-spacing: 0.2px;
+    letter-spacing: 0.1px;
     line-height: 1;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .main-content {
@@ -2247,6 +2252,21 @@ table.attention-table td.word-label {
 }
 .cmdk-fab:hover { transform: translateY(-2px) scale(1.05); }
 .cmdk-fab svg { width: 22px; height: 22px; }
+
+/* On mobile the sidebar becomes a bottom tab bar — lift the FAB above it so
+   it doesn't overlap the right-most nav item, and hide the redundant sidebar
+   search trigger (the FAB + ⌘K already cover search). These rules live after
+   the base .sidebar-search / .cmdk-fab definitions so they win the cascade. */
+@media (max-width: 768px) {
+  .sidebar-search { display: none; }
+  .cmdk-fab {
+    bottom: 78px;
+    right: 1rem;
+    width: 46px;
+    height: 46px;
+  }
+  .cmdk-fab svg { width: 19px; height: 19px; }
+}
 
 /* Overlay + modal */
 .cmdk-overlay {
