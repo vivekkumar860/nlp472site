@@ -1956,14 +1956,169 @@ function renderAssistantAnswer(q, res) {
     </div>`;
 }
 
-function runAssistantQuery(q) {
+// ---- AI layer (RAG): retrieve locally, synthesize with an LLM via /api/chat ----
+
+const ASSISTANT_AI_KEY = 'nlp_hub_assistant_ai';
+let ASSISTANT_LAST = { q: '', res: null };
+
+function assistantAIEnabled() {
+  const v = localStorage.getItem(ASSISTANT_AI_KEY);
+  return v === null ? true : v === '1';
+}
+function setAssistantAI(on) {
+  try { localStorage.setItem(ASSISTANT_AI_KEY, on ? '1' : '0'); } catch (e) {}
+}
+
+// Safe, minimal markdown -> HTML (input is escaped first, so this is XSS-safe).
+function mdLite(text) {
+  let h = escapeHtml(text);
+  h = h.replace(/`([^`]+)`/g, '<code>$1</code>');
+  h = h.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  h = h.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+  const lines = h.split('\n');
+  let out = '';
+  let inList = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    const m = line.match(/^(?:[-*]|\d+\.)\s+(.*)/);
+    if (m) {
+      if (!inList) { out += '<ul>'; inList = true; }
+      out += `<li>${m[1]}</li>`;
+      continue;
+    }
+    if (inList) { out += '</ul>'; inList = false; }
+    if (line) out += `<p>${line}</p>`;
+  }
+  if (inList) out += '</ul>';
+  return out;
+}
+
+// Pull the plain text of the retrieved passages (in relevance order) as grounding.
+function buildAIMessages(q, res) {
+  let context = '';
+  if (res && res.source && ASSISTANT_INDEX) {
+    const byId = new Map(ASSISTANT_INDEX.docs.map(d => [d.sectionId, d]));
+    const wanted = [res.source.sectionId, ...(res.related || []).map(r => r.sectionId)];
+    const passages = [];
+    wanted.forEach(id => {
+      const d = byId.get(id);
+      if (d) passages.push(`[${d.unitNum} · ${d.title}]\n${d.plain.slice(0, 900)}`);
+    });
+    context = passages.join('\n\n');
+  }
+  const system =
+    'You are an expert, friendly NLP tutor embedded in an interactive learning site. ' +
+    'Explain clearly and accurately for a student. Prefer the supplied lesson excerpts as your source of truth; ' +
+    'if they are insufficient, use general NLP knowledge and note that briefly. ' +
+    'Be concise: a few short paragraphs or bullet points. Use a tiny example when it helps. Format with light markdown.';
+  const user = context
+    ? `Question: ${q}\n\nLesson excerpts (your primary source):\n${context}`
+    : `Question: ${q}\n\n(No matching lesson excerpt was found — answer from general NLP knowledge and say so briefly.)`;
+  return [
+    { role: 'system', content: system },
+    { role: 'user', content: user },
+  ];
+}
+
+function sourcesHtml(res) {
+  if (!res || !res.source) return '';
+  const src = res.source;
+  const related = (res.related || []).map(r => `
+    <button class="assistant-source-chip" onclick="goToLesson(${r.unitId}, '${r.sectionId}')">
+      <span class="assistant-src-unit">${escapeHtml(r.unitNum)}</span>
+      <span class="assistant-src-title">${escapeHtml(r.title)}</span>
+    </button>`).join('');
+  return `
+    <div class="assistant-primary-source">
+      <div class="assistant-src-meta">
+        <span class="assistant-src-unit">${escapeHtml(src.unitNum)}</span>
+        <span class="assistant-src-title">${escapeHtml(src.title)}</span>
+      </div>
+      <button class="assistant-open-btn" onclick="goToLesson(${src.unitId}, '${src.sectionId}')">Open lesson →</button>
+    </div>
+    ${related ? `<div class="assistant-related"><span class="assistant-related-label">Grounded in</span><div class="assistant-source-chips">${related}</div></div>` : ''}`;
+}
+
+async function streamAssistantAI(q, res) {
+  const out = document.getElementById('assistant-results');
+  if (!out) return;
+  const conf = res.source ? confidenceLabel(res.score) : null;
+  out.innerHTML = `
+    <div class="assistant-answer-card assistant-ai-card">
+      <div class="assistant-answer-head">
+        <span class="assistant-q">${escapeHtml(q)}</span>
+        <span class="assistant-conf assistant-conf-ai">AI tutor</span>
+      </div>
+      <div class="assistant-ai-body"><span class="assistant-typing"><i></i><i></i><i></i></span></div>
+      ${sourcesHtml(res)}
+      <p class="assistant-transparency">${res.source
+        ? `Retrieved with TF-IDF over ${res.corpusSize} lesson passages, then synthesized by AI.`
+        : `Answered by AI from general NLP knowledge.`}
+        <button class="assistant-mode-link" type="button">Show local-only answer</button></p>
+    </div>`;
+  const body = out.querySelector('.assistant-ai-body');
+  let acc = '';
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: buildAIMessages(q, res),
+        temperature: 0.4,
+        top_p: 1,
+        max_tokens: 1024,
+        stream: true,
+      }),
+    });
+    if (!resp.ok || !resp.body) throw new Error('Request failed (' + resp.status + ')');
+    const reader = resp.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        const t = line.trim();
+        if (!t.startsWith('data:')) continue;
+        const data = t.slice(5).trim();
+        if (data === '[DONE]' || !data) continue;
+        try {
+          const j = JSON.parse(data);
+          const delta = j.choices?.[0]?.delta?.content;
+          if (delta) { acc += delta; body.textContent = acc; }
+        } catch (e) { /* ignore keep-alive / partial */ }
+      }
+    }
+    if (!acc.trim()) throw new Error('Empty response');
+    body.innerHTML = mdLite(acc);
+  } catch (err) {
+    body.innerHTML = `
+      <p class="assistant-snippet">${escapeHtml(res.snippet || 'The closest lesson passage is shown below.')}</p>
+      <p class="assistant-offline-note">⚠ AI unavailable (${escapeHtml(String(err.message || err))}) — showing the local TF-IDF answer instead.</p>`;
+  }
+}
+
+async function runAssistantQuery(q) {
   q = (q || '').trim();
   if (!q) return;
   const input = document.getElementById('assistant-input');
   if (input) input.value = q;
   const res = answerQuestion(q);
-  renderAssistantAnswer(q, res);
-  if (res && !res.empty && !res.noMatch) { saveAssistantHistory(q); renderAssistantHistory(); }
+  ASSISTANT_LAST = { q, res };
+
+  if (!res || res.empty) { renderAssistantAnswer(q, res); return; }
+
+  const online = navigator.onLine !== false;
+  if (assistantAIEnabled() && online) {
+    await streamAssistantAI(q, res);
+  } else {
+    renderAssistantAnswer(q, res);
+  }
+  saveAssistantHistory(q);
+  renderAssistantHistory();
 }
 
 function initStudyAssistant() {
@@ -1980,10 +2135,23 @@ function initStudyAssistant() {
   if (askBtn) askBtn.addEventListener('click', () => runAssistantQuery(input.value));
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); runAssistantQuery(input.value); } });
 
+  // AI synthesis toggle
+  const aiToggle = document.getElementById('assistant-ai-toggle');
+  if (aiToggle) {
+    aiToggle.checked = assistantAIEnabled();
+    aiToggle.addEventListener('change', () => {
+      setAssistantAI(aiToggle.checked);
+      if (ASSISTANT_LAST.q) runAssistantQuery(ASSISTANT_LAST.q);
+    });
+  }
+
   const view = document.getElementById('assistant');
   if (view) view.addEventListener('click', (e) => {
     const chip = e.target.closest('.assistant-chip');
-    if (chip && chip.dataset.q) runAssistantQuery(chip.dataset.q);
+    if (chip && chip.dataset.q) { runAssistantQuery(chip.dataset.q); return; }
+    if (e.target.closest('.assistant-mode-link') && ASSISTANT_LAST.res) {
+      renderAssistantAnswer(ASSISTANT_LAST.q, ASSISTANT_LAST.res);
+    }
   });
 
   renderAssistantHistory();

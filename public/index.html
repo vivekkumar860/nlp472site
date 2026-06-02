@@ -950,7 +950,7 @@
         <div class="header-wrapper">
           <div class="page-title">
             <h2>NLP Study Assistant</h2>
-            <p>Ask anything about the course. Answers are retrieved from your own lesson notes using TF-IDF + cosine similarity — entirely in your browser, no internet required.</p>
+            <p>Ask anything about the course. A local TF-IDF search retrieves the most relevant lesson passages, then an AI tutor synthesizes a clear, cited answer — with a one-click switch to the fully offline local answer.</p>
           </div>
         </div>
 
@@ -961,6 +961,11 @@
               <input id="assistant-input" type="text" placeholder="e.g. What is self-attention? How does TF-IDF work?" autocomplete="off" spellcheck="false">
               <button id="assistant-ask-btn" class="assistant-ask-btn">Ask</button>
             </div>
+            <label class="assistant-ai-switch" title="When on, an AI tutor synthesizes the answer from the retrieved passages. When off, you get the instant offline TF-IDF answer.">
+              <input type="checkbox" id="assistant-ai-toggle" checked>
+              <span class="assistant-ai-switch-track"><span class="assistant-ai-switch-thumb"></span></span>
+              <span class="assistant-ai-switch-label">AI synthesis</span>
+            </label>
             <div class="assistant-chips" id="assistant-seed-chips"></div>
             <div class="assistant-history-row" id="assistant-history-row" hidden>
               <span class="assistant-history-label">Recent</span>

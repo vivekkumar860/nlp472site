@@ -2643,3 +2643,109 @@ body.cmdk-open { overflow: hidden; }
   .assistant-primary-source { flex-direction: column; align-items: flex-start; }
   .assistant-open-btn { width: 100%; }
 }
+
+/* ---- AI tutor (RAG synthesis) ---- */
+.assistant-ai-card {
+  border-color: var(--border-glow);
+  box-shadow: 0 0 0 1px var(--border-glow), var(--shadow-md);
+}
+.assistant-conf-ai {
+  background: var(--accent-gradient);
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+.assistant-ai-body {
+  margin: 0.25rem 0 0.5rem;
+  color: var(--text-main);
+  line-height: 1.65;
+  font-size: 0.95rem;
+  min-height: 1.4rem;
+}
+.assistant-ai-body p { margin: 0 0 0.7rem; }
+.assistant-ai-body p:last-child { margin-bottom: 0; }
+.assistant-ai-body ul { margin: 0 0 0.7rem; padding-left: 1.25rem; }
+.assistant-ai-body li { margin: 0.2rem 0; }
+.assistant-ai-body code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: rgba(99, 102, 241, 0.16);
+  color: var(--accent-cyan);
+  padding: 0.1rem 0.35rem;
+  border-radius: 6px;
+}
+.assistant-ai-body strong { color: #fff; }
+
+.assistant-typing { display: inline-flex; gap: 5px; padding: 0.3rem 0; }
+.assistant-typing i {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--primary-color);
+  display: inline-block;
+  animation: assistantBlink 1.2s infinite ease-in-out both;
+}
+.assistant-typing i:nth-child(2) { animation-delay: 0.2s; background: var(--secondary-color); }
+.assistant-typing i:nth-child(3) { animation-delay: 0.4s; background: var(--accent-cyan); }
+@keyframes assistantBlink {
+  0%, 80%, 100% { opacity: 0.25; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+.assistant-offline-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: var(--warning);
+}
+.assistant-mode-link {
+  background: none;
+  border: none;
+  color: var(--accent-cyan);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  padding: 0;
+  margin-left: 0.4rem;
+  text-decoration: underline;
+}
+.assistant-mode-link:hover { color: var(--primary-color); }
+
+/* AI synthesis toggle switch */
+.assistant-ai-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+}
+.assistant-ai-switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.assistant-ai-switch-track {
+  position: relative;
+  width: 38px; height: 22px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  border: 1px solid var(--border-color);
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.assistant-ai-switch-thumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: var(--transition);
+}
+.assistant-ai-switch input:checked + .assistant-ai-switch-track {
+  background: var(--accent-gradient);
+  border-color: transparent;
+}
+.assistant-ai-switch input:checked + .assistant-ai-switch-track .assistant-ai-switch-thumb {
+  transform: translateX(16px);
+}
+.assistant-ai-switch input:focus-visible + .assistant-ai-switch-track {
+  box-shadow: 0 0 0 3px var(--border-glow);
+}
+.assistant-ai-switch-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
